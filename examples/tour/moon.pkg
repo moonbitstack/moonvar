@@ -1,6 +1,9 @@
-// Everything this repository does, in one run: `moon run examples/tour`.
-pkgtype(kind: "executable")
-
 import {
-  "moonbitstack/CHANGE-ME/lib",
+  "moonbitstack/moonvar/fixed",
+  "moonbitstack/moonvar/quic",
+  "moonbitstack/moonvar/prefix",
+  "moonbitstack/moonvar/leb128",
+  "moonbitstack/moonvar/lenenc",
 }
+
+pkgtype(kind: "executable")

@@ -1,0 +1,6 @@
+// The length-encoded integer of the MySQL client/server protocol:
+// https://dev.mysql.com/doc/dev/mysql-server/latest/page_protocol_basic_dt_integers.html
+//
+// One octet under 251, otherwise a marker saying how many little-endian octets follow.
+// The gap it leaves at the top is deliberate: 0xfb is NULL in a row and 0xff begins an
+// error packet, so neither can be mistaken for a length. MariaDB writes the same.

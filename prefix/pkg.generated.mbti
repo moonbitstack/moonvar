@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonvar/prefix"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn decode(BytesView, at? : Int, prefix~ : Int) -> (Int, Int) raise Refused
+
+pub fn encode(Int, prefix~ : Int, flags? : Int) -> Bytes
+
+pub fn flagged(BytesView, at? : Int, bit? : Int) -> Bool
+
+pub let limit : Int64
+
+pub fn size(Int, prefix~ : Int) -> Int
+
+// Errors
+pub(all) suberror Refused {
+  Truncated(String)
+  Exceeded(limit~ : Int64, got~ : Int64)
+} derive(Eq, @debug.Debug)
+pub fn Refused::equal(Self, Self) -> Bool
+pub fn Refused::not_equal(Self, Self) -> Bool
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_repr(Self) -> @debug.Repr
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+
+// Type aliases
+
+// Traits

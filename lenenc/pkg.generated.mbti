@@ -1,0 +1,34 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonvar/lenenc"
+
+import {
+  "moonbitlang/core/buffer",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn decode(BytesView, at? : Int) -> (UInt64, Int) raise Refused
+
+pub fn encode(UInt64) -> Bytes
+
+pub fn size(UInt64) -> Int
+
+pub fn write(@buffer.Buffer, UInt64) -> Unit
+
+// Errors
+pub(all) suberror Refused {
+  Truncated(String)
+  Reserved(got~ : Int)
+} derive(Eq, @debug.Debug)
+pub fn Refused::equal(Self, Self) -> Bool
+pub fn Refused::not_equal(Self, Self) -> Bool
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_repr(Self) -> @debug.Repr
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+
+// Type aliases
+
+// Traits

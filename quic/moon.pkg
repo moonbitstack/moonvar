@@ -1,0 +1,7 @@
+// The variable-length integer of QUIC, RFC 9000 §16:
+// https://www.rfc-editor.org/rfc/rfc9000#section-16
+//
+// Two bits of the first octet say how many octets there are — one, two, four or eight —
+// and the other sixty-two carry the value. HTTP/3 writes every frame type and length
+// this way (RFC 9114 §7.1), as do the QUIC transport parameters and the datagram
+// extension.

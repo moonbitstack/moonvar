@@ -1,0 +1,8 @@
+// The prefix integer of HTTP header compression, RFC 7541 §5.1:
+// https://www.rfc-editor.org/rfc/rfc7541#section-5.1
+//
+// A value in the low N bits of an octet, continuing into further octets when it does not
+// fit, with the bits above the prefix left to whatever representation is using it.
+//
+// RFC 9204 §4.1.1 gives QPACK the same encoding, so HTTP/2's header compression and
+// HTTP/3's read one implementation.

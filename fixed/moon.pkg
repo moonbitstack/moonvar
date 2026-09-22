@@ -1,0 +1,9 @@
+// The fixed widths and their byte order:
+// https://www.rfc-editor.org/rfc/rfc1700 names the big end "network byte order"
+//
+// Reading answers `None` when the view is too short, so a truncated message is an
+// ordinary answer rather than an index past the end; writing appends to a buffer, so
+// neither direction allocates on the way through.
+//
+// The twenty-four-bit width is here because TLS writes a handshake message's length in
+// three octets (RFC 8446 §4) and HTTP/2 writes a frame's the same way (RFC 9113 §4.1).

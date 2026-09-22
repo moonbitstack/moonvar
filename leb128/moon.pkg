@@ -1,0 +1,9 @@
+// Base-128 varints, and the zigzag transform that goes with them:
+// https://protobuf.dev/programming-guides/encoding/#varints
+//
+// Seven bits per octet, least significant group first, the high bit marking that more
+// follow. protobuf calls it "Base 128 Varints" and DWARF calls it unsigned LEB128; they
+// are the same encoding.
+//
+// Zigzag is separate because it is a transform on the value rather than an encoding of
+// it: it folds a signed number onto an unsigned one so a small negative stays short.

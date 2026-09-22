@@ -1,0 +1,69 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonvar/fixed"
+
+import {
+  "moonbitlang/core/buffer",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub let order : Order
+
+pub fn read_f32(BytesView, at? : Int, order? : Order) -> Float?
+
+pub fn read_f64(BytesView, at? : Int, order? : Order) -> Double?
+
+pub fn read_i16(BytesView, at? : Int, order? : Order) -> Int?
+
+pub fn read_i32(BytesView, at? : Int, order? : Order) -> Int?
+
+pub fn read_i64(BytesView, at? : Int, order? : Order) -> Int64?
+
+pub fn read_i8(BytesView, at? : Int) -> Int?
+
+pub fn read_u16(BytesView, at? : Int, order? : Order) -> Int?
+
+pub fn read_u24(BytesView, at? : Int, order? : Order) -> Int?
+
+pub fn read_u32(BytesView, at? : Int, order? : Order) -> UInt?
+
+pub fn read_u64(BytesView, at? : Int, order? : Order) -> UInt64?
+
+pub fn read_u8(BytesView, at? : Int) -> Int?
+
+pub fn write_f32(@buffer.Buffer, Float, order? : Order) -> Unit
+
+pub fn write_f64(@buffer.Buffer, Double, order? : Order) -> Unit
+
+pub fn write_i16(@buffer.Buffer, Int, order? : Order) -> Unit
+
+pub fn write_i32(@buffer.Buffer, Int, order? : Order) -> Unit
+
+pub fn write_i64(@buffer.Buffer, Int64, order? : Order) -> Unit
+
+pub fn write_i8(@buffer.Buffer, Int) -> Unit
+
+pub fn write_u16(@buffer.Buffer, Int, order? : Order) -> Unit
+
+pub fn write_u24(@buffer.Buffer, Int, order? : Order) -> Unit
+
+pub fn write_u32(@buffer.Buffer, UInt, order? : Order) -> Unit
+
+pub fn write_u64(@buffer.Buffer, UInt64, order? : Order) -> Unit
+
+pub fn write_u8(@buffer.Buffer, Int) -> Unit
+
+// Errors
+
+// Types and methods
+pub(all) enum Order {
+  Big
+  Little
+} derive(Eq, @debug.Debug)
+pub fn Order::equal(Self, Self) -> Bool
+pub fn Order::not_equal(Self, Self) -> Bool
+pub fn Order::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits
