@@ -183,3 +183,56 @@ test "the widths round-trip across their whole range" {
     assert_eq(read_u64(bytes(b => write_u64(b, v))[:]), Some(v))
   }
 }
+
+///|
+test "a width carried in a variable is the same arithmetic as a named one" {
+  // What the named widths do, `size` does, either way round.
+  assert_eq(
+    read_uint(hexb("1234")[:], size=2),
+    read_u16(hexb("1234")[:]).map(v => v.to_uint64()),
+  )
+  assert_eq(
+    read_uint(hexb("123456")[:], size=3, order=Little),
+    read_u24(hexb("123456")[:], order=Little).map(v => v.to_uint64()),
+  )
+  assert_eq(read_uint(hexb("12345678")[:], size=4), Some(0x12345678UL))
+  assert_eq(
+    read_uint(hexb("123456789abcdef0")[:], size=8, order=Little),
+    Some(0xf0debc9a78563412UL),
+  )
+  // And the widths no named function has, which is why this exists.
+  assert_eq(read_uint(hexb("010203040506")[:], size=6), Some(0x010203040506UL))
+  assert_eq(
+    hex(bytes(b => write_uint(b, 0x010203040506UL, size=6))),
+    "010203040506",
+  )
+  assert_eq(
+    hex(bytes(b => write_uint(b, 0x010203040506UL, size=6, order=Little))),
+    "060504030201",
+  )
+  // Octets above the width are dropped, which is what `int<n>` means by it.
+  assert_eq(hex(bytes(b => write_uint(b, 0x1234UL, size=1))), "34")
+  // A width outside one to eight octets is not a width.
+  assert_eq(read_uint(hexb("12")[:], size=0), None)
+  assert_eq(read_uint(hexb("123456789abcdef012")[:], size=9), None)
+  // And a view too short still answers rather than reading past the end.
+  assert_eq(read_uint(hexb("1234")[:], size=3), None)
+  assert_eq(read_uint(hexb("1234")[:], at=1, size=2), None)
+}
+
+///|
+test "the width a value needs is one octet per eight bits it occupies" {
+  assert_eq(size(0UL), 1)
+  assert_eq(size(255UL), 1)
+  assert_eq(size(256UL), 2)
+  assert_eq(size(0xffffffUL), 3)
+  assert_eq(size(0xffffffffffffffffUL), 8)
+  // Which is the width that round-trips it.
+  for v in [0UL, 1UL, 255UL, 256UL, 0x010203040506UL, 0xffffffffffffffffUL] {
+    let n = size(v)
+    assert_eq(
+      read_uint(bytes(b => write_uint(b, v, size=n))[:], size=n),
+      Some(v),
+    )
+  }
+}

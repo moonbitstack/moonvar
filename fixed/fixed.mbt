@@ -264,6 +264,69 @@ pub fn write_f64(buf : Buffer, v : Double, order? : Order = order) -> Unit {
 }
 
 ///|
+/// The value in `size` octets at `at`, for a width the caller only knows at run time.
+///
+/// The named widths above are what most callers want and read better where they apply.
+/// This is for a protocol that spells its own: MySQL's `int<n>` and the three-octet
+/// lengths of a Kafka or DNS field are the same arithmetic with `size` carried in a
+/// variable, and writing the loop out again per protocol is how the widths drift.
+///
+/// `None` when `size` is outside one to eight octets, or when the view is shorter than
+/// `at` plus `size`.
+pub fn read_uint(
+  b : BytesView,
+  at? : Int = 0,
+  size~ : Int,
+  order? : Order = order,
+) -> UInt64? {
+  if size < 1 || size > 8 || !fits(b, at, size) {
+    return None
+  }
+  let mut out = 0UL
+  for i = 0; i < size; i = i + 1 {
+    let octet = match order {
+      Big => b[at + i].to_int()
+      Little => b[at + size - 1 - i].to_int()
+    }
+    out = (out << 8) | octet.to_uint64()
+  }
+  Some(out)
+}
+
+///|
+/// Append the low `size` octets of `v`, for a width the caller only knows at run time.
+///
+/// Octets above `size` are dropped, which is what a protocol that says `int<3>` means by
+/// it; a caller that needs to know a value did not fit asks `size` first.
+pub fn write_uint(
+  buf : Buffer,
+  v : UInt64,
+  size~ : Int,
+  order? : Order = order,
+) -> Unit {
+  for i = 0; i < size; i = i + 1 {
+    let shift = match order {
+      Big => (size - 1 - i) * 8
+      Little => i * 8
+    }
+    buf.write_byte((v >> shift).to_byte())
+  }
+}
+
+///|
+/// How many octets `v` needs, which is one for zero and otherwise as many as its highest
+/// set bit occupies.
+pub fn size(v : UInt64) -> Int {
+  let mut n = 1
+  let mut rest = v >> 8
+  while rest > 0 {
+    n = n + 1
+    rest = rest >> 8
+  }
+  n
+}
+
+///|
 pub extend Order with Debug::{to_repr}
 
 ///|

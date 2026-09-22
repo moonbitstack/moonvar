@@ -31,6 +31,10 @@ pub fn read_u64(BytesView, at? : Int, order? : Order) -> UInt64?
 
 pub fn read_u8(BytesView, at? : Int) -> Int?
 
+pub fn read_uint(BytesView, at? : Int, size~ : Int, order? : Order) -> UInt64?
+
+pub fn size(UInt64) -> Int
+
 pub fn write_f32(@buffer.Buffer, Float, order? : Order) -> Unit
 
 pub fn write_f64(@buffer.Buffer, Double, order? : Order) -> Unit
@@ -52,6 +56,8 @@ pub fn write_u32(@buffer.Buffer, UInt, order? : Order) -> Unit
 pub fn write_u64(@buffer.Buffer, UInt64, order? : Order) -> Unit
 
 pub fn write_u8(@buffer.Buffer, Int) -> Unit
+
+pub fn write_uint(@buffer.Buffer, UInt64, size~ : Int, order? : Order) -> Unit
 
 // Errors
 

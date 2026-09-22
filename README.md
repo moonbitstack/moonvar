@@ -9,6 +9,7 @@ let buf = Buffer()
 @fixed.write_u32(buf, 0x12345678)          // big end first, as the network writes
 @fixed.write_u16(buf, 513, order=Little)   // unless it does not
 @fixed.read_u32(bytes[:], at=4)            // None when the view is too short
+@fixed.read_uint(bytes[:], size=n)         // or a width the protocol spells itself
 
 // And the variable-length ones, each under the name of the protocol that defines it.
 @quic.encode(1337UL)                       // RFC 9000 §16, two-bit width prefix
@@ -23,7 +24,7 @@ Run `moon run examples/tour` for the whole surface in one go.
 
 |  | Encoding | Who writes it |
 |:--:|:--|:--|
-| `fixed` | Byte order for `u8`…`u64`, `i8`…`i64`, `f32`, `f64`, and the 24-bit width protocols use for lengths | Everything |
+| `fixed` | Byte order for `u8`…`u64`, `i8`…`i64`, `f32`, `f64`, the 24-bit width protocols use for lengths, and a width carried in a variable | Everything |
 | `quic` | Two bits say the width, sixty-two carry the value ([RFC 9000 §16](https://www.rfc-editor.org/rfc/rfc9000#section-16)) | QUIC, HTTP/3, the datagram extension |
 | `prefix` | A value in the low N bits, continuing when it does not fit ([RFC 7541 §5.1](https://www.rfc-editor.org/rfc/rfc7541#section-5.1)) | HPACK, and QPACK unchanged ([RFC 9204 §4.1.1](https://www.rfc-editor.org/rfc/rfc9204#section-4.1.1)) |
 | `leb128` | Seven bits an octet, least significant first, plus zigzag | protobuf, DWARF |
