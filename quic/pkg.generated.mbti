@@ -2,13 +2,13 @@
 package "moonbitstack/moonvar/quic"
 
 // Values
-pub fn decode(BytesView) -> (UInt64, Int)?
+pub fn decode(BytesView) -> (UInt64, Int32)?
 
 pub fn encode(UInt64) -> Bytes
 
 pub let max : UInt64
 
-pub fn size(UInt64) -> Int
+pub fn size(UInt64) -> Int32
 
 // Errors
 

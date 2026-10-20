@@ -50,7 +50,7 @@ pub let limit : Int64 = 0x7fffffffL
 ///
 /// The three worked examples of Appendix C: ten in a five-bit prefix is one octet,
 /// 1337 in five bits is three, and forty-two at an octet boundary is one.
-pub fn encode(v : Int, prefix~ : Int, flags? : Int = 0) -> Bytes {
+pub fn encode(v : Int32, prefix~ : Int32, flags~ : Int32 = 0) -> Bytes {
   let buf = Buffer()
   let ceiling = (1 << prefix) - 1
   if v < ceiling {
@@ -69,7 +69,7 @@ pub fn encode(v : Int, prefix~ : Int, flags? : Int = 0) -> Bytes {
 
 ///|
 /// How many octets `v` takes in a `prefix`-bit prefix, without writing it.
-pub fn size(v : Int, prefix~ : Int) -> Int {
+pub fn size(v : Int32, prefix~ : Int32) -> Int32 {
   let ceiling = (1 << prefix) - 1
   if v < ceiling {
     return 1
@@ -88,9 +88,9 @@ pub fn size(v : Int, prefix~ : Int) -> Int {
 /// masked off and ignored (RFC 7541 §5.1).
 pub fn decode(
   b : BytesView,
-  at? : Int = 0,
-  prefix~ : Int,
-) -> (Int, Int) raise Refused {
+  at~ : Int32 = 0,
+  prefix~ : Int32,
+) -> (Int32, Int32) raise Refused {
   if at < 0 || at >= b.length() {
     raise Truncated("no prefix octet")
   }
@@ -130,6 +130,6 @@ pub fn decode(
 /// Whether the octet at `at` has its high bit set — the `H` bit of a string literal in
 /// both header compressions, which says the octets after the length are Huffman-coded
 /// (RFC 7541 §5.2, RFC 9204 §4.1.2).
-pub fn flagged(b : BytesView, at? : Int = 0, bit? : Int = 7) -> Bool {
+pub fn flagged(b : BytesView, at~ : Int32 = 0, bit~ : Int32 = 7) -> Bool {
   at >= 0 && at < b.length() && (b[at].to_int() & (1 << bit)) != 0
 }

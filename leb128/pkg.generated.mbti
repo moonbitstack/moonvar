@@ -7,13 +7,13 @@ import {
 }
 
 // Values
-pub fn decode(BytesView, at? : Int) -> (UInt64, Int) raise Refused
+pub fn decode(BytesView, at? : Int32) -> (UInt64, Int32) raise Refused
 
 pub fn encode(UInt64) -> Bytes
 
-pub let limit : Int
+pub let limit : Int32
 
-pub fn size(UInt64) -> Int
+pub fn size(UInt64) -> Int32
 
 pub fn unzigzag(UInt64) -> Int64
 
@@ -24,7 +24,7 @@ pub fn zigzag(Int64) -> UInt64
 // Errors
 pub(all) suberror Refused {
   Truncated(String)
-  Exceeded(limit~ : Int, got~ : Int)
+  Exceeded(limit~ : Int32, got~ : Int32)
 } derive(Eq, @debug.Debug)
 pub fn Refused::equal(Self, Self) -> Bool
 pub fn Refused::not_equal(Self, Self) -> Bool

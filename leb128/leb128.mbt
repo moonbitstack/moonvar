@@ -6,7 +6,7 @@
 /// ten octets sixty-four bits can occupy.
 pub(all) suberror Refused {
   Truncated(String)
-  Exceeded(limit~ : Int, got~ : Int)
+  Exceeded(limit~ : Int32, got~ : Int32)
 } derive(Eq, Debug)
 
 ///|
@@ -33,7 +33,7 @@ pub extend Refused with Eq::{not_equal, equal}
 ///
 /// A reader that did not stop here would follow continuation bits for as long as a peer
 /// cared to send them.
-pub let limit : Int = 10
+pub let limit : Int32 = 10
 
 ///|
 /// `v` as base-128 octets: seven bits each, least significant group first, the high bit
@@ -60,7 +60,7 @@ pub fn write(buf : Buffer, v : UInt64) -> Unit {
 
 ///|
 /// How many octets `v` takes, without writing it.
-pub fn size(v : UInt64) -> Int {
+pub fn size(v : UInt64) -> Int32 {
   let mut n = 1
   let mut rest = v >> 7
   while rest > 0 {
@@ -72,7 +72,7 @@ pub fn size(v : UInt64) -> Int {
 
 ///|
 /// The value at `at` and how many octets it took.
-pub fn decode(b : BytesView, at? : Int = 0) -> (UInt64, Int) raise Refused {
+pub fn decode(b : BytesView, at~ : Int32 = 0) -> (UInt64, Int32) raise Refused {
   let mut out = 0UL
   let mut shift = 0
   let mut used = 0

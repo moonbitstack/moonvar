@@ -74,7 +74,7 @@ test "a value that runs off the end, or past what an Int holds, is refused" {
 
 ///|
 /// What decoding these octets refuses with.
-fn refused(b : Bytes, p : Int) -> Refused {
+fn refused(b : Bytes, p : Int32) -> Refused {
   let mut out : Refused? = None
   try {
     let _ = decode(b[:], prefix=p)

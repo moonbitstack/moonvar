@@ -19,13 +19,13 @@ pub let order : Order = Big
 ///
 /// Every reader here checks this before it indexes, so a short buffer answers `None`
 /// rather than reading past the end or wrapping an offset.
-fn fits(b : BytesView, at : Int, size : Int) -> Bool {
+fn fits(b : BytesView, at : Int32, size : Int32) -> Bool {
   at >= 0 && size >= 0 && at <= b.length() - size
 }
 
 ///|
 /// The octet at `at`, or `None` when the view is shorter than that.
-pub fn read_u8(b : BytesView, at? : Int = 0) -> Int? {
+pub fn read_u8(b : BytesView, at~ : Int32 = 0) -> Int32? {
   if fits(b, at, 1) {
     Some(b[at].to_int())
   } else {
@@ -35,7 +35,11 @@ pub fn read_u8(b : BytesView, at? : Int = 0) -> Int? {
 
 ///|
 /// The sixteen-bit value at `at`.
-pub fn read_u16(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
+pub fn read_u16(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> Int32? {
   if !fits(b, at, 2) {
     return None
   }
@@ -51,7 +55,11 @@ pub fn read_u16(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
 ///
 /// Three-octet lengths are how TLS writes a handshake message (RFC 8446 §4) and how
 /// HTTP/2 writes a frame (RFC 9113 §4.1), which is why a width no language has is here.
-pub fn read_u24(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
+pub fn read_u24(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> Int32? {
   if !fits(b, at, 3) {
     return None
   }
@@ -64,7 +72,11 @@ pub fn read_u24(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
 
 ///|
 /// The thirty-two-bit value at `at`.
-pub fn read_u32(b : BytesView, at? : Int = 0, order? : Order = order) -> UInt? {
+pub fn read_u32(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> UInt32? {
   if !fits(b, at, 4) {
     return None
   }
@@ -83,8 +95,8 @@ pub fn read_u32(b : BytesView, at? : Int = 0, order? : Order = order) -> UInt? {
 /// The sixty-four-bit value at `at`.
 pub fn read_u64(
   b : BytesView,
-  at? : Int = 0,
-  order? : Order = order,
+  at~ : Int32 = 0,
+  order~ : Order = order,
 ) -> UInt64? {
   if !fits(b, at, 8) {
     return None
@@ -102,7 +114,7 @@ pub fn read_u64(
 
 ///|
 /// The signed octet at `at`, two's complement.
-pub fn read_i8(b : BytesView, at? : Int = 0) -> Int? {
+pub fn read_i8(b : BytesView, at~ : Int32 = 0) -> Int32? {
   match read_u8(b, at~) {
     Some(v) => Some(if v >= 0x80 { v - 0x100 } else { v })
     None => None
@@ -111,7 +123,11 @@ pub fn read_i8(b : BytesView, at? : Int = 0) -> Int? {
 
 ///|
 /// The signed sixteen-bit value at `at`, two's complement.
-pub fn read_i16(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
+pub fn read_i16(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> Int32? {
   match read_u16(b, at~, order~) {
     Some(v) => Some(if v >= 0x8000 { v - 0x10000 } else { v })
     None => None
@@ -120,7 +136,11 @@ pub fn read_i16(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
 
 ///|
 /// The signed thirty-two-bit value at `at`, two's complement.
-pub fn read_i32(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
+pub fn read_i32(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> Int32? {
   match read_u32(b, at~, order~) {
     Some(v) => Some(v.reinterpret_as_int())
     None => None
@@ -129,7 +149,11 @@ pub fn read_i32(b : BytesView, at? : Int = 0, order? : Order = order) -> Int? {
 
 ///|
 /// The signed sixty-four-bit value at `at`, two's complement.
-pub fn read_i64(b : BytesView, at? : Int = 0, order? : Order = order) -> Int64? {
+pub fn read_i64(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> Int64? {
   match read_u64(b, at~, order~) {
     Some(v) => Some(v.reinterpret_as_int64())
     None => None
@@ -141,7 +165,11 @@ pub fn read_i64(b : BytesView, at? : Int = 0, order? : Order = order) -> Int64? 
 ///
 /// The bits are reinterpreted, not converted: a signalling NaN or a negative zero comes
 /// back as it was written, which is what a wire format means by a float.
-pub fn read_f32(b : BytesView, at? : Int = 0, order? : Order = order) -> Float? {
+pub fn read_f32(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> Float? {
   match read_u32(b, at~, order~) {
     Some(v) => Some(Float::reinterpret_from_int(v.reinterpret_as_int()))
     None => None
@@ -152,8 +180,8 @@ pub fn read_f32(b : BytesView, at? : Int = 0, order? : Order = order) -> Float? 
 /// The IEEE-754 binary64 at `at`.
 pub fn read_f64(
   b : BytesView,
-  at? : Int = 0,
-  order? : Order = order,
+  at~ : Int32 = 0,
+  order~ : Order = order,
 ) -> Double? {
   match read_u64(b, at~, order~) {
     Some(v) => Some(v.reinterpret_as_double())
@@ -163,13 +191,13 @@ pub fn read_f64(
 
 ///|
 /// Append an octet.
-pub fn write_u8(buf : Buffer, v : Int) -> Unit {
+pub fn write_u8(buf : Buffer, v : Int32) -> Unit {
   buf.write_byte(v.to_byte())
 }
 
 ///|
 /// Append a sixteen-bit value.
-pub fn write_u16(buf : Buffer, v : Int, order? : Order = order) -> Unit {
+pub fn write_u16(buf : Buffer, v : Int32, order~ : Order = order) -> Unit {
   match order {
     Big => {
       buf.write_byte((v >> 8).to_byte())
@@ -184,7 +212,7 @@ pub fn write_u16(buf : Buffer, v : Int, order? : Order = order) -> Unit {
 
 ///|
 /// Append a twenty-four-bit value.
-pub fn write_u24(buf : Buffer, v : Int, order? : Order = order) -> Unit {
+pub fn write_u24(buf : Buffer, v : Int32, order~ : Order = order) -> Unit {
   match order {
     Big =>
       for i = 2; i >= 0; i = i - 1 {
@@ -199,7 +227,7 @@ pub fn write_u24(buf : Buffer, v : Int, order? : Order = order) -> Unit {
 
 ///|
 /// Append a thirty-two-bit value.
-pub fn write_u32(buf : Buffer, v : UInt, order? : Order = order) -> Unit {
+pub fn write_u32(buf : Buffer, v : UInt32, order~ : Order = order) -> Unit {
   match order {
     Big =>
       for i = 3; i >= 0; i = i - 1 {
@@ -214,7 +242,7 @@ pub fn write_u32(buf : Buffer, v : UInt, order? : Order = order) -> Unit {
 
 ///|
 /// Append a sixty-four-bit value.
-pub fn write_u64(buf : Buffer, v : UInt64, order? : Order = order) -> Unit {
+pub fn write_u64(buf : Buffer, v : UInt64, order~ : Order = order) -> Unit {
   match order {
     Big =>
       for i = 7; i >= 0; i = i - 1 {
@@ -229,37 +257,37 @@ pub fn write_u64(buf : Buffer, v : UInt64, order? : Order = order) -> Unit {
 
 ///|
 /// Append a signed octet, two's complement.
-pub fn write_i8(buf : Buffer, v : Int) -> Unit {
+pub fn write_i8(buf : Buffer, v : Int32) -> Unit {
   write_u8(buf, v & 0xff)
 }
 
 ///|
 /// Append a signed sixteen-bit value, two's complement.
-pub fn write_i16(buf : Buffer, v : Int, order? : Order = order) -> Unit {
+pub fn write_i16(buf : Buffer, v : Int32, order~ : Order = order) -> Unit {
   write_u16(buf, v & 0xffff, order~)
 }
 
 ///|
 /// Append a signed thirty-two-bit value, two's complement.
-pub fn write_i32(buf : Buffer, v : Int, order? : Order = order) -> Unit {
+pub fn write_i32(buf : Buffer, v : Int32, order~ : Order = order) -> Unit {
   write_u32(buf, v.reinterpret_as_uint(), order~)
 }
 
 ///|
 /// Append a signed sixty-four-bit value, two's complement.
-pub fn write_i64(buf : Buffer, v : Int64, order? : Order = order) -> Unit {
+pub fn write_i64(buf : Buffer, v : Int64, order~ : Order = order) -> Unit {
   write_u64(buf, v.reinterpret_as_uint64(), order~)
 }
 
 ///|
 /// Append an IEEE-754 binary32, bits as they are.
-pub fn write_f32(buf : Buffer, v : Float, order? : Order = order) -> Unit {
+pub fn write_f32(buf : Buffer, v : Float, order~ : Order = order) -> Unit {
   write_u32(buf, v.reinterpret_as_int().reinterpret_as_uint(), order~)
 }
 
 ///|
 /// Append an IEEE-754 binary64, bits as they are.
-pub fn write_f64(buf : Buffer, v : Double, order? : Order = order) -> Unit {
+pub fn write_f64(buf : Buffer, v : Double, order~ : Order = order) -> Unit {
   write_u64(buf, v.reinterpret_as_uint64(), order~)
 }
 
@@ -275,9 +303,9 @@ pub fn write_f64(buf : Buffer, v : Double, order? : Order = order) -> Unit {
 /// `at` plus `size`.
 pub fn read_uint(
   b : BytesView,
-  at? : Int = 0,
-  size~ : Int,
-  order? : Order = order,
+  at~ : Int32 = 0,
+  size~ : Int32,
+  order~ : Order = order,
 ) -> UInt64? {
   if size < 1 || size > 8 || !fits(b, at, size) {
     return None
@@ -301,8 +329,8 @@ pub fn read_uint(
 pub fn write_uint(
   buf : Buffer,
   v : UInt64,
-  size~ : Int,
-  order? : Order = order,
+  size~ : Int32,
+  order~ : Order = order,
 ) -> Unit {
   for i = 0; i < size; i = i + 1 {
     let shift = match order {
@@ -316,7 +344,7 @@ pub fn write_uint(
 ///|
 /// How many octets `v` needs, which is one for zero and otherwise as many as its highest
 /// set bit occupies.
-pub fn size(v : UInt64) -> Int {
+pub fn size(v : UInt64) -> Int32 {
   let mut n = 1
   let mut rest = v >> 8
   while rest > 0 {

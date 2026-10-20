@@ -51,7 +51,7 @@ fn pad(s : String) -> String {
 }
 
 ///|
-fn opt_u(o : UInt?) -> String {
+fn opt_u(o : UInt32?) -> String {
   match o {
     Some(v) => "0x" + hex_u32(v)
     None => "(too short)"
@@ -59,7 +59,7 @@ fn opt_u(o : UInt?) -> String {
 }
 
 ///|
-fn opt_i(o : Int?) -> String {
+fn opt_i(o : Int32?) -> String {
   match o {
     Some(v) => v.to_string()
     None => "(too short)"
@@ -75,7 +75,7 @@ fn opt_d(o : Double?) -> String {
 }
 
 ///|
-fn hex_u32(v : UInt) -> String {
+fn hex_u32(v : UInt32) -> String {
   let buf = Buffer()
   @fixed.write_u32(buf, v)
   hex(buf.to_bytes())

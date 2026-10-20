@@ -9,7 +9,7 @@
 /// reader that took one for a length would be off by however much followed.
 pub(all) suberror Refused {
   Truncated(String)
-  Reserved(got~ : Int)
+  Reserved(got~ : Int32)
 } derive(Eq, Debug)
 
 ///|
@@ -62,7 +62,7 @@ pub fn write(buf : Buffer, v : UInt64) -> Unit {
 
 ///|
 /// How many octets `v` takes, without writing it.
-pub fn size(v : UInt64) -> Int {
+pub fn size(v : UInt64) -> Int32 {
   if v < 0xfbUL {
     1
   } else if v < 0x10000UL {
@@ -76,7 +76,7 @@ pub fn size(v : UInt64) -> Int {
 
 ///|
 /// The value at `at` and how many octets it took.
-pub fn decode(b : BytesView, at? : Int = 0) -> (UInt64, Int) raise Refused {
+pub fn decode(b : BytesView, at~ : Int32 = 0) -> (UInt64, Int32) raise Refused {
   if at < 0 || at >= b.length() {
     raise Truncated("no first octet")
   }
@@ -102,7 +102,7 @@ pub fn decode(b : BytesView, at? : Int = 0) -> (UInt64, Int) raise Refused {
 
 ///|
 /// Append `n` little-endian octets of `v`.
-fn little(buf : Buffer, v : UInt64, n : Int) -> Unit {
+fn little(buf : Buffer, v : UInt64, n : Int32) -> Unit {
   for i = 0; i < n; i = i + 1 {
     buf.write_byte((v >> (i * 8)).to_byte())
   }

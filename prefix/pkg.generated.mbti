@@ -6,15 +6,15 @@ import {
 }
 
 // Values
-pub fn decode(BytesView, at? : Int, prefix~ : Int) -> (Int, Int) raise Refused
+pub fn decode(BytesView, at? : Int32, prefix~ : Int32) -> (Int32, Int32) raise Refused
 
-pub fn encode(Int, prefix~ : Int, flags? : Int) -> Bytes
+pub fn encode(Int32, prefix~ : Int32, flags? : Int32) -> Bytes
 
-pub fn flagged(BytesView, at? : Int, bit? : Int) -> Bool
+pub fn flagged(BytesView, at? : Int32, bit? : Int32) -> Bool
 
 pub let limit : Int64
 
-pub fn size(Int, prefix~ : Int) -> Int
+pub fn size(Int32, prefix~ : Int32) -> Int32
 
 // Errors
 pub(all) suberror Refused {

@@ -42,7 +42,7 @@ pub fn encode(v : UInt64) -> Bytes {
 /// Decode a QUIC variable-length integer at the start of `b`, returning its value
 /// and the number of bytes it occupied, or `None` when `b` is shorter than the
 /// length its first byte's prefix declares.
-pub fn decode(b : BytesView) -> (UInt64, Int)? {
+pub fn decode(b : BytesView) -> (UInt64, Int32)? {
   if b.length() == 0 {
     return None
   }
@@ -63,7 +63,7 @@ pub fn decode(b : BytesView) -> (UInt64, Int)? {
 ///
 /// A writer that has to put a length before a payload needs this: the length field's own
 /// size is part of what it describes, and measuring twice is cheaper than writing twice.
-pub fn size(v : UInt64) -> Int {
+pub fn size(v : UInt64) -> Int32 {
   if v <= 0x3fUL {
     1
   } else if v <= 0x3fffUL {
