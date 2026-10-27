@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API reference — moonvar</title>
+<meta name="description" content="Every public function, value and error of moonvar's five packages, with the note that ships beside it.">
+<meta name="theme-color" content="#dff1ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#072328" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+<script src="assets/site.js" defer></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0' stop-color='%23b9fff0'/%3E%3Cstop offset='1' stop-color='%230a6a60'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='13' fill='url(%23g)'/%3E%3C/svg%3E">
+</head>
+<body hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="innerHTML show:window:top">
+
+<div class="pool" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="./">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">moonvar</span>
+      <span class="brand-sub">integers as octets</span>
+    </a>
+    <nav class="nav" aria-label="Site">
+      <a href="./guide.html">Guide</a>
+      <a href="./api.html" aria-current="page">API</a>
+      <a href="./bits.html">Bit lab</a>
+      <a class="gh" href="https://github.com/moonbitstack/moonvar" aria-label="Source on GitHub" title="Source on GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      </a>
+      <button class="themebtn" type="button" aria-label="Switch theme">☀</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap api">
+
+  <aside class="api-nav" aria-label="Packages">
+    <h4>Packages</h4>
+    <ol><li><a href="#fixed-top">fixed</a><ol class="sub">
+<li><a href="#fixed-Order">Order</a></li>
+<li><a href="#fixed-order">order</a></li>
+<li><a href="#fixed-read_f32">read_f32</a></li>
+<li><a href="#fixed-read_f64">read_f64</a></li>
+<li><a href="#fixed-read_i16">read_i16</a></li>
+<li><a href="#fixed-read_i32">read_i32</a></li>
+<li><a href="#fixed-read_i64">read_i64</a></li>
+<li><a href="#fixed-read_i8">read_i8</a></li>
+<li><a href="#fixed-read_u16">read_u16</a></li>
+<li><a href="#fixed-read_u24">read_u24</a></li>
+<li><a href="#fixed-read_u32">read_u32</a></li>
+<li><a href="#fixed-read_u64">read_u64</a></li>
+<li><a href="#fixed-read_u8">read_u8</a></li>
+<li><a href="#fixed-read_uint">read_uint</a></li>
+<li><a href="#fixed-write_f32">write_f32</a></li>
+<li><a href="#fixed-write_f64">write_f64</a></li>
+<li><a href="#fixed-write_i16">write_i16</a></li>
+<li><a href="#fixed-write_i32">write_i32</a></li>
+<li><a href="#fixed-write_i64">write_i64</a></li>
+<li><a href="#fixed-write_i8">write_i8</a></li>
+<li><a href="#fixed-write_u16">write_u16</a></li>
+<li><a href="#fixed-write_u24">write_u24</a></li>
+<li><a href="#fixed-write_u32">write_u32</a></li>
+<li><a href="#fixed-write_u64">write_u64</a></li>
+<li><a href="#fixed-write_u8">write_u8</a></li>
+<li><a href="#fixed-write_uint">write_uint</a></li>
+<li><a href="#fixed-size">size</a></li>
+</ol></li></ol>
+<ol><li><a href="#quic-top">quic</a><ol class="sub">
+<li><a href="#quic-max">max</a></li>
+<li><a href="#quic-encode">encode</a></li>
+<li><a href="#quic-decode">decode</a></li>
+<li><a href="#quic-size">size</a></li>
+</ol></li></ol>
+<ol><li><a href="#prefix-top">prefix</a><ol class="sub">
+<li><a href="#prefix-limit">limit</a></li>
+<li><a href="#prefix-encode">encode</a></li>
+<li><a href="#prefix-decode">decode</a></li>
+<li><a href="#prefix-flagged">flagged</a></li>
+<li><a href="#prefix-size">size</a></li>
+<li><a href="#prefix-Refused">Refused</a></li>
+</ol></li></ol>
+<ol><li><a href="#leb128-top">leb128</a><ol class="sub">
+<li><a href="#leb128-limit">limit</a></li>
+<li><a href="#leb128-encode">encode</a></li>
+<li><a href="#leb128-decode">decode</a></li>
+<li><a href="#leb128-write">write</a></li>
+<li><a href="#leb128-size">size</a></li>
+<li><a href="#leb128-unzigzag">unzigzag</a></li>
+<li><a href="#leb128-zigzag">zigzag</a></li>
+<li><a href="#leb128-Refused">Refused</a></li>
+</ol></li></ol>
+<ol><li><a href="#lenenc-top">lenenc</a><ol class="sub">
+<li><a href="#lenenc-encode">encode</a></li>
+<li><a href="#lenenc-decode">decode</a></li>
+<li><a href="#lenenc-write">write</a></li>
+<li><a href="#lenenc-size">size</a></li>
+<li><a href="#lenenc-Refused">Refused</a></li>
+</ol></li></ol>
+  </aside>
+
+  <div class="api-body">
+    <header class="chapter" style="padding-bottom:1.2rem">
+      <p class="eyebrow">Reference</p>
+      <h1 style="font-size:clamp(2rem,4vw,3rem);margin-bottom:0.7rem">API</h1>
+      <p class="lede">
+        Every public function, value and error of the five packages. A signature is what the
+        compiler reports for the package, and the note under it is the one written beside the
+        code; both come from the sources in this repository.
+      </p>
+      <p class="tiny dim" style="margin-top:0.8rem">5 packages · 50 public items</p>
+    </header>
+
+    <div class="api-filter">
+      <input id="api-filter" type="search" placeholder="filter by name" aria-label="Filter entries by name" autocomplete="off" spellcheck="false">
+      <span class="count" id="api-count" aria-live="polite"></span>
+    </div>
+
+    <section class="band" id="fixed-top">
+<div class="band-head"><h2>fixed</h2><span class="route">moonbitstack/moonvar/fixed</span></div>
+<p>Byte order for the widths a machine has: u8 to u64, the 24-bit length TLS and HTTP/2 use, floats, and a width carried in a variable.</p>
+<h4 class="group">Types</h4>
+<div class="entry" id="fixed-Order">
+<h3><span class="kind ty">enum</span>Order</h3>
+<p>Which end of a number goes first (RFC 1700 calls the big end "network byte order").</p>
+<pre class="sig">pub(all) enum Order {</pre>
+<ul class="variants"><li>Big</li><li>Little</li></ul>
+</div>
+<h4 class="group">Values</h4>
+<div class="entry" id="fixed-order">
+<h3><span class="kind">let</span>order</h3>
+<p>Big-endian, because every protocol in reach of this package writes that way: IP and everything over it, TLS, QUIC, HTTP/2 and HTTP/3. The exceptions are local formats — MySQL's wire protocol, most file headers — and they say so.</p>
+<pre class="sig">pub let order : Order</pre>
+</div>
+<h4 class="group">Readers</h4>
+<div class="entry" id="fixed-read_f32">
+<h3><span class="kind">fn</span>read_f32</h3>
+<p>The IEEE-754 binary32 at <code>at</code>. The bits are reinterpreted, not converted: a signalling NaN or a negative zero comes back as it was written, which is what a wire format means by a float.</p>
+<pre class="sig">pub fn read_f32(BytesView, at? : Int32, order? : Order) -&gt; Float?</pre>
+</div>
+<div class="entry" id="fixed-read_f64">
+<h3><span class="kind">fn</span>read_f64</h3>
+<p>The IEEE-754 binary64 at <code>at</code>.</p>
+<pre class="sig">pub fn read_f64(BytesView, at? : Int32, order? : Order) -&gt; Double?</pre>
+</div>
+<div class="entry" id="fixed-read_i16">
+<h3><span class="kind">fn</span>read_i16</h3>
+<p>The signed sixteen-bit value at <code>at</code>, two's complement.</p>
+<pre class="sig">pub fn read_i16(BytesView, at? : Int32, order? : Order) -&gt; Int32?</pre>
+</div>
+<div class="entry" id="fixed-read_i32">
+<h3><span class="kind">fn</span>read_i32</h3>
+<p>The signed thirty-two-bit value at <code>at</code>, two's complement.</p>
+<pre class="sig">pub fn read_i32(BytesView, at? : Int32, order? : Order) -&gt; Int32?</pre>
+</div>
+<div class="entry" id="fixed-read_i64">
+<h3><span class="kind">fn</span>read_i64</h3>
+<p>The signed sixty-four-bit value at <code>at</code>, two's complement.</p>
+<pre class="sig">pub fn read_i64(BytesView, at? : Int32, order? : Order) -&gt; Int64?</pre>
+</div>
+<div class="entry" id="fixed-read_i8">
+<h3><span class="kind">fn</span>read_i8</h3>
+<p>The signed octet at <code>at</code>, two's complement.</p>
+<pre class="sig">pub fn read_i8(BytesView, at? : Int32) -&gt; Int32?</pre>
+</div>
+<div class="entry" id="fixed-read_u16">
+<h3><span class="kind">fn</span>read_u16</h3>
+<p>The sixteen-bit value at <code>at</code>.</p>
+<pre class="sig">pub fn read_u16(BytesView, at? : Int32, order? : Order) -&gt; Int32?</pre>
+</div>
+<div class="entry" id="fixed-read_u24">
+<h3><span class="kind">fn</span>read_u24</h3>
+<p>The twenty-four-bit value at <code>at</code>. Three-octet lengths are how TLS writes a handshake message (RFC 8446 §4) and how HTTP/2 writes a frame (RFC 9113 §4.1), which is why a width no language has is here.</p>
+<pre class="sig">pub fn read_u24(BytesView, at? : Int32, order? : Order) -&gt; Int32?</pre>
+</div>
+<div class="entry" id="fixed-read_u32">
+<h3><span class="kind">fn</span>read_u32</h3>
+<p>The thirty-two-bit value at <code>at</code>.</p>
+<pre class="sig">pub fn read_u32(BytesView, at? : Int32, order? : Order) -&gt; UInt32?</pre>
+</div>
+<div class="entry" id="fixed-read_u64">
+<h3><span class="kind">fn</span>read_u64</h3>
+<p>The sixty-four-bit value at <code>at</code>.</p>
+<pre class="sig">pub fn read_u64(BytesView, at? : Int32, order? : Order) -&gt; UInt64?</pre>
+</div>
+<div class="entry" id="fixed-read_u8">
+<h3><span class="kind">fn</span>read_u8</h3>
+<p>The octet at <code>at</code>, or <code>None</code> when the view is shorter than that.</p>
+<pre class="sig">pub fn read_u8(BytesView, at? : Int32) -&gt; Int32?</pre>
+</div>
+<div class="entry" id="fixed-read_uint">
+<h3><span class="kind">fn</span>read_uint</h3>
+<p>The value in <code>size</code> octets at <code>at</code>, for a width the caller only knows at run time. The named widths above are what most callers want and read better where they apply. This is for a protocol that spells its own: MySQL's <code>int&lt;n&gt;</code> and the three-octet lengths of a Kafka or DNS field are the same arithmetic with <code>size</code> carried in a variable, and writing the loop out again per protocol is how the widths drift. <code>None</code> when <code>size</code> is outside one to eight octets, or when the view is shorter than <code>at</code> plus <code>size</code>.</p>
+<pre class="sig">pub fn read_uint(BytesView, at? : Int32, size~ : Int32, order? : Order) -&gt; UInt64?</pre>
+</div>
+<h4 class="group">Writers</h4>
+<div class="entry" id="fixed-write_f32">
+<h3><span class="kind">fn</span>write_f32</h3>
+<p>Append an IEEE-754 binary32, bits as they are.</p>
+<pre class="sig">pub fn write_f32(@buffer.Buffer, Float, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_f64">
+<h3><span class="kind">fn</span>write_f64</h3>
+<p>Append an IEEE-754 binary64, bits as they are.</p>
+<pre class="sig">pub fn write_f64(@buffer.Buffer, Double, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_i16">
+<h3><span class="kind">fn</span>write_i16</h3>
+<p>Append a signed sixteen-bit value, two's complement.</p>
+<pre class="sig">pub fn write_i16(@buffer.Buffer, Int32, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_i32">
+<h3><span class="kind">fn</span>write_i32</h3>
+<p>Append a signed thirty-two-bit value, two's complement.</p>
+<pre class="sig">pub fn write_i32(@buffer.Buffer, Int32, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_i64">
+<h3><span class="kind">fn</span>write_i64</h3>
+<p>Append a signed sixty-four-bit value, two's complement.</p>
+<pre class="sig">pub fn write_i64(@buffer.Buffer, Int64, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_i8">
+<h3><span class="kind">fn</span>write_i8</h3>
+<p>Append a signed octet, two's complement.</p>
+<pre class="sig">pub fn write_i8(@buffer.Buffer, Int32) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_u16">
+<h3><span class="kind">fn</span>write_u16</h3>
+<p>Append a sixteen-bit value.</p>
+<pre class="sig">pub fn write_u16(@buffer.Buffer, Int32, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_u24">
+<h3><span class="kind">fn</span>write_u24</h3>
+<p>Append a twenty-four-bit value.</p>
+<pre class="sig">pub fn write_u24(@buffer.Buffer, Int32, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_u32">
+<h3><span class="kind">fn</span>write_u32</h3>
+<p>Append a thirty-two-bit value.</p>
+<pre class="sig">pub fn write_u32(@buffer.Buffer, UInt32, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_u64">
+<h3><span class="kind">fn</span>write_u64</h3>
+<p>Append a sixty-four-bit value.</p>
+<pre class="sig">pub fn write_u64(@buffer.Buffer, UInt64, order? : Order) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_u8">
+<h3><span class="kind">fn</span>write_u8</h3>
+<p>Append an octet.</p>
+<pre class="sig">pub fn write_u8(@buffer.Buffer, Int32) -&gt; Unit</pre>
+</div>
+<div class="entry" id="fixed-write_uint">
+<h3><span class="kind">fn</span>write_uint</h3>
+<p>Append the low <code>size</code> octets of <code>v</code>, for a width the caller only knows at run time. Octets above <code>size</code> are dropped, which is what a protocol that says <code>int&lt;3&gt;</code> means by it; a caller that needs to know a value did not fit asks <code>size</code> first.</p>
+<pre class="sig">pub fn write_uint(@buffer.Buffer, UInt64, size~ : Int32, order? : Order) -&gt; Unit</pre>
+</div>
+<h4 class="group">Measuring</h4>
+<div class="entry" id="fixed-size">
+<h3><span class="kind">fn</span>size</h3>
+<p>How many octets <code>v</code> needs, which is one for zero and otherwise as many as its highest set bit occupies.</p>
+<pre class="sig">pub fn size(UInt64) -&gt; Int32</pre>
+</div>
+</section>
+<section class="band" id="quic-top">
+<div class="band-head"><h2>quic</h2><span class="route">moonbitstack/moonvar/quic</span></div>
+<p>RFC 9000 §16. Two bits name the width, sixty-two carry the value.</p>
+<h4 class="group">Values</h4>
+<div class="entry" id="quic-max">
+<h3><span class="kind">let</span>max</h3>
+<p>The largest value the encoding can carry: sixty-two bits (RFC 9000 §16).</p>
+<pre class="sig">pub let max : UInt64</pre>
+</div>
+<h4 class="group">Encoding</h4>
+<div class="entry" id="quic-encode">
+<h3><span class="kind">fn</span>encode</h3>
+<p>Encode <code>v</code> as a QUIC variable-length integer (RFC 9000 §16) in the shortest form that holds it: the two most-significant bits of the first byte select the length (00 → 1 byte / 6-bit value, 01 → 2 / 14-bit, 10 → 4 / 30-bit, 11 → 8 / 62-bit) and the remaining bits carry the value big-endian. <code>v</code> must be below 2^62 (QUIC's varint ceiling).</p>
+<pre class="sig">pub fn encode(UInt64) -&gt; Bytes</pre>
+</div>
+<h4 class="group">Decoding</h4>
+<div class="entry" id="quic-decode">
+<h3><span class="kind">fn</span>decode</h3>
+<p>Decode a QUIC variable-length integer at the start of <code>b</code>, returning its value and the number of bytes it occupied, or <code>None</code> when <code>b</code> is shorter than the length its first byte's prefix declares.</p>
+<pre class="sig">pub fn decode(BytesView) -&gt; (UInt64, Int32)?</pre>
+</div>
+<h4 class="group">Measuring</h4>
+<div class="entry" id="quic-size">
+<h3><span class="kind">fn</span>size</h3>
+<p>How many octets <code>v</code> takes, without writing it. A writer that has to put a length before a payload needs this: the length field's own size is part of what it describes, and measuring twice is cheaper than writing twice.</p>
+<pre class="sig">pub fn size(UInt64) -&gt; Int32</pre>
+</div>
+</section>
+<section class="band" id="prefix-top">
+<div class="band-head"><h2>prefix</h2><span class="route">moonbitstack/moonvar/prefix</span></div>
+<p>RFC 7541 §5.1. A value in the low N bits of the first octet, continuing when it does not fit — HPACK, and QPACK unchanged.</p>
+<h4 class="group">Values</h4>
+<div class="entry" id="prefix-limit">
+<h3><span class="kind">let</span>limit</h3>
+<p>The largest value this reads, which is what a positive <code>Int</code> holds. §5.1 leaves the ceiling to the implementation and asks for a decoding error past it, so a peer cannot make a reader loop over continuation octets for as long as it likes.</p>
+<pre class="sig">pub let limit : Int64</pre>
+</div>
+<h4 class="group">Encoding</h4>
+<div class="entry" id="prefix-encode">
+<h3><span class="kind">fn</span>encode</h3>
+<p><code>v</code> in the low <code>prefix</code> bits of the first octet, continuing into further octets when it does not fit (RFC 7541 §5.1). <code>flags</code> are the bits above the prefix, which every representation using this encoding puts something in: HPACK's six field representations and QPACK's five each begin with a pattern there. They are OR'd into the first octet and are the caller's to get right. The three worked examples of Appendix C: ten in a five-bit prefix is one octet, 1337 in five bits is three, and forty-two at an octet boundary is one.</p>
+<pre class="sig">pub fn encode(Int32, prefix~ : Int32, flags? : Int32) -&gt; Bytes</pre>
+</div>
+<h4 class="group">Decoding</h4>
+<div class="entry" id="prefix-decode">
+<h3><span class="kind">fn</span>decode</h3>
+<p>The value at <code>at</code> and how many octets it took, with the flag bits above the prefix masked off and ignored (RFC 7541 §5.1).</p>
+<pre class="sig">pub fn decode(BytesView, at? : Int32, prefix~ : Int32) -&gt; (Int32, Int32) raise Refused</pre>
+</div>
+<div class="entry" id="prefix-flagged">
+<h3><span class="kind">fn</span>flagged</h3>
+<p>Whether the octet at <code>at</code> has its high bit set — the <code>H</code> bit of a string literal in both header compressions, which says the octets after the length are Huffman-coded (RFC 7541 §5.2, RFC 9204 §4.1.2).</p>
+<pre class="sig">pub fn flagged(BytesView, at? : Int32, bit? : Int32) -&gt; Bool</pre>
+</div>
+<h4 class="group">Measuring</h4>
+<div class="entry" id="prefix-size">
+<h3><span class="kind">fn</span>size</h3>
+<p>How many octets <code>v</code> takes in a <code>prefix</code>-bit prefix, without writing it.</p>
+<pre class="sig">pub fn size(Int32, prefix~ : Int32) -&gt; Int32</pre>
+</div>
+<h4 class="group">Errors</h4>
+<div class="entry" id="prefix-Refused">
+<h3><span class="kind er">error</span>Refused</h3>
+<p>Why a prefix integer was refused. <code>Truncated</code> is a value that continues past the end of what it was given; <code>Exceeded</code> is one that needs more than a positive <code>Int</code> can hold. RFC 7541 §5.1 makes a value larger than the implementation's limit a decoding error, and an encoding of the same value in more octets than necessary is one too — a receiver that read either would disagree with the sender about what came next.</p>
+<pre class="sig">pub(all) suberror Refused {</pre>
+<ul class="variants"><li>Truncated(String)</li><li>Exceeded(limit~ : Int64, got~ : Int64)</li></ul>
+<p>Implements <code>Show</code>.</p>
+</div>
+</section>
+<section class="band" id="leb128-top">
+<div class="band-head"><h2>leb128</h2><span class="route">moonbitstack/moonvar/leb128</span></div>
+<p>Base-128 varints: seven bits an octet, least significant first, plus the zigzag that keeps signed values short.</p>
+<h4 class="group">Values</h4>
+<div class="entry" id="leb128-limit">
+<h3><span class="kind">let</span>limit</h3>
+<p>How many octets sixty-four bits can occupy: nine of seven bits and one of the last. A reader that did not stop here would follow continuation bits for as long as a peer cared to send them.</p>
+<pre class="sig">pub let limit : Int32</pre>
+</div>
+<h4 class="group">Encoding</h4>
+<div class="entry" id="leb128-encode">
+<h3><span class="kind">fn</span>encode</h3>
+<p><code>v</code> as base-128 octets: seven bits each, least significant group first, the high bit set on every octet but the last. This is protobuf's "Base 128 Varints" and DWARF's unsigned LEB128, which are the same encoding under two names.</p>
+<pre class="sig">pub fn encode(UInt64) -&gt; Bytes</pre>
+</div>
+<h4 class="group">Decoding</h4>
+<div class="entry" id="leb128-decode">
+<h3><span class="kind">fn</span>decode</h3>
+<p>The value at <code>at</code> and how many octets it took.</p>
+<pre class="sig">pub fn decode(BytesView, at? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
+</div>
+<h4 class="group">Writers</h4>
+<div class="entry" id="leb128-write">
+<h3><span class="kind">fn</span>write</h3>
+<p>The same, appended to a buffer rather than allocated.</p>
+<pre class="sig">pub fn write(@buffer.Buffer, UInt64) -&gt; Unit</pre>
+</div>
+<h4 class="group">Measuring</h4>
+<div class="entry" id="leb128-size">
+<h3><span class="kind">fn</span>size</h3>
+<p>How many octets <code>v</code> takes, without writing it.</p>
+<pre class="sig">pub fn size(UInt64) -&gt; Int32</pre>
+</div>
+<h4 class="group">Signed</h4>
+<div class="entry" id="leb128-unzigzag">
+<h3><span class="kind">fn</span>unzigzag</h3>
+<p>The inverse: an unsigned value unfolded back onto a signed one.</p>
+<pre class="sig">pub fn unzigzag(UInt64) -&gt; Int64</pre>
+</div>
+<div class="entry" id="leb128-zigzag">
+<h3><span class="kind">fn</span>zigzag</h3>
+<p>A signed value folded onto an unsigned one so that small magnitudes stay short: <code>-1</code> becomes 1, <code>1</code> becomes 2, <code>-2</code> becomes 3 (protobuf's <code>sint32</code> and <code>sint64</code>). Without it a negative value would sign-extend to sixty-four bits and take all ten octets, whatever its magnitude.</p>
+<pre class="sig">pub fn zigzag(Int64) -&gt; UInt64</pre>
+</div>
+<h4 class="group">Errors</h4>
+<div class="entry" id="leb128-Refused">
+<h3><span class="kind er">error</span>Refused</h3>
+<p>Why a value was refused: it continues past the end of what it was given, or past the ten octets sixty-four bits can occupy.</p>
+<pre class="sig">pub(all) suberror Refused {</pre>
+<ul class="variants"><li>Truncated(String)</li><li>Exceeded(limit~ : Int32, got~ : Int32)</li></ul>
+<p>Implements <code>Show</code>.</p>
+</div>
+</section>
+<section class="band" id="lenenc-top">
+<div class="band-head"><h2>lenenc</h2><span class="route">moonbitstack/moonvar/lenenc</span></div>
+<p>MySQL's length-encoded integer: one octet below 251, otherwise a marker and little-endian octets.</p>
+<h4 class="group">Encoding</h4>
+<div class="entry" id="lenenc-encode">
+<h3><span class="kind">fn</span>encode</h3>
+<p><code>v</code> as a length-encoded integer: one octet under 251, otherwise a marker saying how many little-endian octets follow. The markers are <code>0xfc</code> for two, <code>0xfd</code> for three and <code>0xfe</code> for eight; 251 through 255 are never written as a bare first octet, which is what leaves <code>0xfb</code> free for NULL and <code>0xff</code> for an error packet.</p>
+<pre class="sig">pub fn encode(UInt64) -&gt; Bytes</pre>
+</div>
+<h4 class="group">Decoding</h4>
+<div class="entry" id="lenenc-decode">
+<h3><span class="kind">fn</span>decode</h3>
+<p>The value at <code>at</code> and how many octets it took.</p>
+<pre class="sig">pub fn decode(BytesView, at? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
+</div>
+<h4 class="group">Writers</h4>
+<div class="entry" id="lenenc-write">
+<h3><span class="kind">fn</span>write</h3>
+<p>The same, appended to a buffer rather than allocated.</p>
+<pre class="sig">pub fn write(@buffer.Buffer, UInt64) -&gt; Unit</pre>
+</div>
+<h4 class="group">Measuring</h4>
+<div class="entry" id="lenenc-size">
+<h3><span class="kind">fn</span>size</h3>
+<p>How many octets <code>v</code> takes, without writing it.</p>
+<pre class="sig">pub fn size(UInt64) -&gt; Int32</pre>
+</div>
+<h4 class="group">Errors</h4>
+<div class="entry" id="lenenc-Refused">
+<h3><span class="kind er">error</span>Refused</h3>
+<p>Why a length-encoded integer was refused: it continues past the end of what it was given, or its first octet is one the protocol reserves for something else. <code>0xfb</code> is NULL in a row and <code>0xff</code> begins an error packet; neither is a number, and a reader that took one for a length would be off by however much followed.</p>
+<pre class="sig">pub(all) suberror Refused {</pre>
+<ul class="variants"><li>Truncated(String)</li><li>Reserved(got~ : Int32)</li></ul>
+<p>Implements <code>Show</code>.</p>
+</div>
+</section>
+  </div>
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <nav aria-label="Elsewhere">
+      <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
+      <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
+      <a href="./guide.html">Guide</a>
+      <a href="./bits.html">Bit lab</a>
+    </nav>
+    <span>Made of water and integers.</span>
+  </div>
+</footer>
+
+</body>
+</html>

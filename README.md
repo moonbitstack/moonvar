@@ -1,81 +1,99 @@
-# moonvar
+<h1 align="center">moonvar</h1>
 
-How a number becomes bytes and back. The fixed widths with their byte order, and the
-variable-length integers four protocol families each define differently.
+<p align="center"><b>A number, written down as octets.</b></p>
+
+<p align="center">
+  Fixed widths, and the variable-length integers that QUIC, HPACK, protobuf and MySQL<br>
+  each spell differently — for MoonBit, one package per encoding.
+</p>
+
+<p align="center">
+  <a href="https://moonbitstack.github.io/moonvar/">Home</a> ·
+  <a href="https://moonbitstack.github.io/moonvar/guide.html">Guide</a> ·
+  <a href="https://moonbitstack.github.io/moonvar/api.html">API</a> ·
+  <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
+</p>
+
+---
 
 ```moonbit
 // The fixed widths, either way round, reading nothing it was not given.
 let buf = Buffer()
-@fixed.write_u32(buf, 0x12345678)          // big end first, as the network writes
-@fixed.write_u16(buf, 513, order=Little)   // unless it does not
-@fixed.read_u32(bytes[:], at=4)            // None when the view is too short
-@fixed.read_uint(bytes[:], size=n)         // or a width the protocol spells itself
+@fixed.write_u32(buf, 0x12345678)               // 12 34 56 78
+@fixed.write_u16(buf, 0x1234, order=Little)     // 34 12
+let wire = buf.to_bytes()
+@fixed.read_u32(wire[:])                        // Some(305419896)
+@fixed.read_u32(wire[:], at=10)                 // None, the view is shorter
 
-// And the variable-length ones, each under the name of the protocol that defines it.
-@quic.encode(1337UL)                       // RFC 9000 §16, two-bit width prefix
-@prefix.encode(1337, prefix=5)             // RFC 7541 §5.1, HPACK and QPACK
-@leb128.encode(150UL)                      // protobuf, DWARF
-@lenenc.encode(65536UL)                    // MySQL and MariaDB
+// One number, in each protocol's own spelling.
+@quic.encode(1337UL)                            // 45 39
+@prefix.encode(1337, prefix=5)                  // 1f 9a 0a
+@leb128.encode(1337UL)                          // b9 0a
+@lenenc.encode(1337UL)                          // fc 39 05
 ```
-
-Run `moon run examples/tour` for the whole surface in one go.
 
 ## Packages
 
-|  | Encoding | Who writes it |
-|:--:|:--|:--|
-| `fixed` | Byte order for `u8`…`u64`, `i8`…`i64`, `f32`, `f64`, the 24-bit width protocols use for lengths, and a width carried in a variable | Everything |
-| `quic` | Two bits say the width, sixty-two carry the value ([RFC 9000 §16](https://www.rfc-editor.org/rfc/rfc9000#section-16)) | QUIC, HTTP/3, the datagram extension |
-| `prefix` | A value in the low N bits, continuing when it does not fit ([RFC 7541 §5.1](https://www.rfc-editor.org/rfc/rfc7541#section-5.1)) | HPACK, and QPACK unchanged ([RFC 9204 §4.1.1](https://www.rfc-editor.org/rfc/rfc9204#section-4.1.1)) |
-| `leb128` | Seven bits an octet, least significant first, plus zigzag | protobuf, DWARF |
-| `lenenc` | One octet under 251, else a marker and little-endian octets | MySQL, MariaDB |
+| | Encoding | Written by |
+|:--|:--|:--|
+| `fixed` | Byte order for `u8`…`u64`, `i8`…`i64`, `f32`, `f64`, the 24-bit length protocols use, and a width carried in a variable | Everything |
+| `quic` | Two bits name the width, sixty-two carry the value — [RFC 9000 §16](https://www.rfc-editor.org/rfc/rfc9000#section-16) | QUIC, HTTP/3 |
+| `prefix` | A value in the low N bits, continuing when it does not fit — [RFC 7541 §5.1](https://www.rfc-editor.org/rfc/rfc7541#section-5.1) | HPACK, QPACK |
+| `leb128` | Seven bits an octet, least significant first, plus zigzag for signed values | protobuf, DWARF |
+| `lenenc` | One octet below 251, otherwise a marker and two, three or eight little-endian octets | MySQL, MariaDB |
 
-Each package is separate and carries no dependency, so wanting protobuf's varint does not
-mean linking QUIC's.
+Each package is separate and carries no dependency, so wanting protobuf's varint does
+not mean linking QUIC's.
 
-## Why this is a library
+## The same number, five ways
 
-Four of these encodings are written in more than one place across a protocol stack, and
-the fixed widths are written everywhere: a hand-rolled `(b[0] << 24) | (b[1] << 16) | …`
-appears in every parser that has ever read a length. They are one thing — a number,
-becoming bytes — they are frozen by the specifications that define them, and none of them
-knows or cares who is calling.
+1337, as each package writes it:
 
-## What is not here
+| `fixed` | `quic` | `prefix(5)` | `leb128` | `lenenc` |
+|:--|:--|:--|:--|:--|
+| `05 39` | `45 39` | `1f 9a 0a` | `b9 0a` | `fc 39 05` |
 
-Text. A number written as digits is `moonjson`'s question, not this one, and a number
-written in base 32 or 64 is `moonbase`'s.
+Two octets, two, three, two, three — and each one is the length some wire already
+expects. `quic` spends two bits on the width; `prefix` spends five on being a value that
+shares an octet with flags; `leb128` spends one bit per octet on saying "another
+follows"; `lenenc` spends a whole octet on a marker; `fixed` spends nothing and pays for
+it with width.
 
-Variable-*width* floats. CBOR and MessagePack pick the narrowest of binary16, binary32
-and binary64 that round-trips exactly; that is a real encoding and will live here as
-`ieee` when something in reach needs it. Nothing does yet, and a package written before
-its first caller is a guess.
+## Reading is half of it
 
-ASN.1's length octets stay in `mooncrypt/asn1`. They are an integer encoding, but they are
-so bound to DER's tag-length-value that pulling them out would be a split for its own
-sake.
-
-## What is checked
-
-`quic` is measured against the four widths RFC 9000 §16 defines at the value that first
-needs each. `prefix` is measured against the three integers RFC 7541 Appendix C.1 works
-out. `leb128` is measured against the values protobuf's encoding guide prints, and its
-zigzag against protobuf's own table — including both ends of the signed range, which is
-where an arithmetic shift in place of a logical one shows up. `lenenc` is measured against
-each of the four widths and against the two first octets the MySQL protocol reserves for
-things that are not lengths.
-
-Every reader is given a truncated input at each width and must answer rather than read
-past the end.
-
-The gate is `moon clean` → `moon fmt` → `moon check --target all --deny-warn` →
-`moon build --target all` → `moon test --target all`, across `wasm`, `wasm-gc`, `js` and
-`native`.
+- **Nothing read past the end.** Every fixed reader checks the width it needs and answers
+  `None` when the view is short. The variable-length readers raise a `Refused` that names
+  the fault: `Truncated`, or past the ceiling the encoding allows.
+- **A width without writing it.** Every package has `size()`: how many octets a value
+  takes, without producing them. A length field has to be measured before the payload it
+  describes is written.
+- **Signed values stay short.** `leb128.zigzag` folds a negative onto an unsigned value,
+  so `-1` costs one octet rather than ten.
 
 ## Install
 
 ```bash
 moon add moonbitstack/moonvar
+```
+
+Then import the package whose wire you speak:
+
+```
+import {
+  "moonbitstack/moonvar/quic",
+}
+```
+
+## Examples
+
+| | |
+|:--|:--|
+| [`examples/tour`](examples/tour/main.mbt) | The whole surface in one run: every encoding, both directions, and the octet count each costs |
+| [`examples/frame`](examples/frame/main.mbt) | A length-prefixed frame — a varint length, then a payload — with the truncated case refused rather than half-read |
+
+```bash
+moon run examples/tour
+moon run examples/frame
 ```
 
 ## Licence

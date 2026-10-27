@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bit lab — moonvar</title>
+<meta name="description" content="One integer, bit by bit: which bits of a QUIC varint, an HPACK prefix, a LEB128 group or a MySQL length marker carry the value, which say another octet follows, and what each encoding costs.">
+<meta name="theme-color" content="#dff1ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#072328" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/demo.js" type="module"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0' stop-color='%23b9fff0'/%3E%3Cstop offset='1' stop-color='%230a6a60'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='13' fill='url(%23g)'/%3E%3C/svg%3E">
+</head>
+<body hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="innerHTML show:window:top">
+
+<div class="pool" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="./">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">moonvar</span>
+      <span class="brand-sub">integers as octets</span>
+    </a>
+    <nav class="nav" aria-label="Site">
+      <a href="./guide.html">Guide</a>
+      <a href="./api.html">API</a>
+      <a href="./bits.html" aria-current="page">Bit lab</a>
+      <a class="gh" href="https://github.com/moonbitstack/moonvar" aria-label="Source on GitHub" title="Source on GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      </a>
+      <button class="themebtn" type="button" aria-label="Switch theme">☀</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap">
+
+  <section class="hero" style="display:block;padding-bottom:1.4rem">
+    <p class="eyebrow">Bit lab</p>
+    <h1 style="font-size:clamp(2.2rem,4.4vw,3.4rem);max-width:24ch">Where the bits go</h1>
+    <p class="lede" style="margin-top:1rem">
+      One integer, written by every encoding in the module. The cells below are the octets
+      the library produced, opened up: a bit that carries part of the value, a bit that names
+      a width, a bit that says another octet follows.
+    </p>
+  </section>
+
+  <section class="lab" aria-label="Bit anatomy">
+    <div class="lab-main glass">
+      <div class="tabs" role="tablist" aria-label="Encoding">
+        <button class="tab" type="button" role="tab" data-enc="quic" aria-selected="true">quic</button>
+        <button class="tab" type="button" role="tab" data-enc="prefix" aria-selected="false">prefix</button>
+        <button class="tab" type="button" role="tab" data-enc="leb128" aria-selected="false">leb128</button>
+        <button class="tab" type="button" role="tab" data-enc="lenenc" aria-selected="false">lenenc</button>
+        <button class="tab" type="button" role="tab" data-enc="fixedbe" aria-selected="false">fixed</button>
+      </div>
+
+      <div class="field" style="margin-bottom:1.1rem">
+        <label for="lab-val">value</label>
+        <input class="num" id="lab-val" value="1337" inputmode="numeric" autocomplete="off" spellcheck="false">
+        <label for="lab-bits">prefix bits</label>
+        <select class="num" id="lab-bits">
+          <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+          <option value="7">7</option><option value="8">8</option>
+        </select>
+        <span class="lab-sum" id="lab-sum"></span>
+      </div>
+
+      <div class="bites" id="bites"></div>
+
+      <div class="legend" aria-label="Legend">
+        <span><i class="l-prefix"></i>prefix · says the width</span>
+        <span><i class="l-flag"></i>flags · the field's own bits</span>
+        <span><i class="l-cont"></i>continuation · another octet follows</span>
+        <span><i class="l-marker"></i>marker · which width follows</span>
+        <span><i class="l-value"></i>value</span>
+      </div>
+    </div>
+
+    <aside class="lab-side glass">
+      <h3>The rule</h3>
+      <p class="small dim" id="lab-note" style="margin-top:0.5rem">…</p>
+      <h3 style="margin-top:1.2rem">Read the octets</h3>
+      <div class="steps" id="steps"></div>
+    </aside>
+  </section>
+
+  <section id="cost">
+    <div class="sec-head">
+      <p class="eyebrow">Cost</p>
+      <h2>What each one spends</h2>
+      <p>
+        Octets per value, measured by calling each encoder. A narrow value costs one octet
+        almost everywhere; the encodings only diverge once the value outgrows a single
+        octet, and by 2<sup>32</sup>−1 the fixed width has been paying for eight octets for
+        a while.
+      </p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>value</th>
+            <th>quic</th>
+            <th>prefix(5)</th>
+            <th>leb128</th>
+            <th>lenenc</th>
+            <th>fixed</th>
+          </tr>
+        </thead>
+        <tbody id="cost-body">
+          <tr><td colspan="6" class="small dim">reading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tiny dim" style="margin-top:0.7rem">
+      The bar length is the octet count out of ten, the most any of them needs for a
+      sixty-four-bit value. A dash means the value is past that encoding's ceiling — QUIC
+      stops at 2<sup>62</sup>−1, and the prefix reader holds a signed 31-bit value.
+    </p>
+  </section>
+
+  <section id="decode">
+    <div class="sec-head">
+      <p class="eyebrow">The other direction</p>
+      <h2>Give them bytes</h2>
+      <p>
+        Each reader is handed the whole run and answers with what it read and how much of it
+        it used. Where two encodings read the same octets and disagree, the disagreement is
+        the point: the octets do not carry which rule wrote them.
+      </p>
+    </div>
+
+    <div class="glass" style="padding:1.2rem 1.35rem">
+      <div class="field" style="margin-bottom:0.9rem">
+        <label for="hex">octets</label>
+        <input class="num" id="hex" value="1f9a0a" spellcheck="false" autocomplete="off" style="width:24ch" aria-label="Octets as hex">
+        <span class="tiny dim">pairs of hex digits; spaces are ignored</span>
+      </div>
+      <div id="decode-rows"></div>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <nav aria-label="Elsewhere">
+      <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
+      <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
+      <a href="./guide.html">Guide</a>
+      <a href="./api.html">API</a>
+    </nav>
+    <span>Made of water and integers.</span>
+  </div>
+</footer>
+
+</body>
+</html>

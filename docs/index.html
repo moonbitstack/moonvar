@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>moonvar — a number, written down as octets</title>
+<meta name="description" content="Integer encodings for MoonBit: the fixed widths in either byte order, and the variable-length integers of QUIC, HPACK, protobuf and MySQL — one package per encoding, none depending on another.">
+<meta name="theme-color" content="#dff1ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#072328" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+<script src="assets/site.js" defer></script>
+<script src="assets/demo.js" type="module"></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0' stop-color='%23b9fff0'/%3E%3Cstop offset='1' stop-color='%230a6a60'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='13' fill='url(%23g)'/%3E%3C/svg%3E">
+</head>
+<body hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="innerHTML show:window:top">
+
+<div class="pool" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="./">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">moonvar</span>
+      <span class="brand-sub">integers as octets</span>
+    </a>
+    <nav class="nav" aria-label="Site">
+      <a href="./guide.html">Guide</a>
+      <a href="./api.html">API</a>
+      <a href="./bits.html">Bit lab</a>
+      <a class="gh" href="https://github.com/moonbitstack/moonvar" aria-label="Source on GitHub" title="Source on GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      </a>
+      <button class="themebtn" type="button" aria-label="Switch theme">☀</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="wrap">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Five encodings · five packages · no dependencies</p>
+        <h1>A number, written<br>down as <span class="drop">octets</span>.</h1>
+      </div>
+      <div class="hero-side">
+        <p class="lede">
+          moonvar turns integers into bytes and reads them back the way five protocols do:
+          the fixed widths in either byte order, and the variable-length integers of QUIC,
+          HPACK, protobuf and MySQL. Each encoding is a package of its own, so you link the
+          one whose wire you are speaking.
+        </p>
+        <div class="hero-links">
+          <a class="btn" href="#surface">Try the surface</a>
+          <a class="btn ghost" href="./guide.html">Read the guide</a>
+        </div>
+        <div class="cmd" role="group" aria-label="Install moonvar">
+          <span class="cmd-prompt" aria-hidden="true">$</span>
+          <code>moon add moonbitstack/moonvar</code>
+          <button class="cmd-copy" type="button" data-copy="moon add moonbitstack/moonvar">copy</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="surface glass reveal" id="surface" aria-labelledby="surface-title">
+      <div class="surface-head">
+        <div>
+          <h2 id="surface-title">One number, every encoding</h2>
+          <p>Every octet below was written by this library, compiled to JavaScript and running in this tab.</p>
+        </div>
+        <div class="surface-tools">
+          <div class="field">
+            <label for="val">value</label>
+            <input class="num" id="val" value="1337" inputmode="numeric" autocomplete="off" spellcheck="false" aria-label="Integer value">
+            <label for="bits">prefix</label>
+            <select class="num" id="bits" aria-label="Prefix width in bits">
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7</option><option value="8">8</option>
+            </select>
+          </div>
+          <div class="presets" aria-label="Sample values">
+            <button class="preset" type="button" data-v="0">0</button>
+            <button class="preset" type="button" data-v="63">63</button>
+            <button class="preset" type="button" data-v="127">127</button>
+            <button class="preset" type="button" data-v="128">128</button>
+            <button class="preset" type="button" data-v="150">150</button>
+            <button class="preset" type="button" data-v="65536">65536</button>
+            <button class="preset" type="button" data-v="4294967295">2³²−1</button>
+            <button class="preset" type="button" data-v="18446744073709551615">2⁶⁴−1</button>
+          </div>
+        </div>
+      </div>
+      <div class="rows" id="rows">
+        <noscript><p class="small dim" style="padding:1rem 1.35rem">The surface needs JavaScript: it is the library itself, compiled to a module and run in the page.</p></noscript>
+      </div>
+      <div class="surface-foot">
+        <span>quic · prefix · leb128 · lenenc · fixed</span>
+        <span id="status">reading…</span>
+      </div>
+    </section>
+
+    <div class="ledger reveal">
+      <div><b>5</b><span>encodings, each a package</span></div>
+      <div><b>42</b><span>public functions over them</span></div>
+      <div><b>0</b><span>packages imported by another</span></div>
+      <div><b>10</b><span>octets, the most LEB128 spends on a u64</span></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="packages">
+      <div class="sec-head reveal">
+        <p class="eyebrow">The five</p>
+        <h2>Same number, five rules</h2>
+        <p>1337 below, in each encoding, from the live panel above. The difference is not style: each rule is what some wire already expects.</p>
+      </div>
+      <div class="grid five">
+        <div class="card pkg-card reveal">
+          <h3>quic</h3>
+          <p class="rule">Two bits name the width — one, two, four or eight octets — and the rest carry the value, big-endian.</p>
+          <div class="eg">1337 → <b>45 39</b></div>
+        </div>
+        <div class="card pkg-card reveal">
+          <h3>prefix</h3>
+          <p class="rule">A value in the low N bits of the first octet, spilling into continuation octets when it does not fit.</p>
+          <div class="eg">1337 → <b>1f 9a 0a</b></div>
+        </div>
+        <div class="card pkg-card reveal">
+          <h3>leb128</h3>
+          <p class="rule">Seven bits an octet, least significant group first, one bit in each saying whether another follows.</p>
+          <div class="eg">1337 → <b>b9 0a</b></div>
+        </div>
+        <div class="card pkg-card reveal">
+          <h3>lenenc</h3>
+          <p class="rule">One octet below 251; above it a marker octet and two, three or eight little-endian octets.</p>
+          <div class="eg">1337 → <b>fc 39 05</b></div>
+        </div>
+        <div class="card pkg-card reveal">
+          <h3>fixed</h3>
+          <p class="rule">The widths a machine has, plus the 24-bit length protocols use, in either byte order.</p>
+          <div class="eg">1337 → <b>05 39</b></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reading">
+      <div class="sec-head reveal">
+        <p class="eyebrow">While reading</p>
+        <h2>Readers that answer</h2>
+        <p>A parser is judged by what it does with a packet it did not expect.</p>
+      </div>
+      <div class="grid three">
+        <div class="card reveal">
+          <h3>Nothing read past the end</h3>
+          <p class="small dim">Every fixed reader checks the width it needs before indexing, and answers <code>None</code> when the view is short. The variable-length readers raise a <code>Refused</code> that names the fault: truncated, or past the ceiling.</p>
+        </div>
+        <div class="card reveal">
+          <h3>A width without writing it</h3>
+          <p class="small dim">Each package has <code>size()</code>: how many octets a value takes, without producing them. A length field has to be measured before the payload it describes is written.</p>
+        </div>
+        <div class="card reveal">
+          <h3>One package, one wire</h3>
+          <p class="small dim">No package imports another. Wanting protobuf's varint does not pull in QUIC's, and a reader that needs one encoding does not carry four.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="next">
+      <div class="sec-head reveal">
+        <p class="eyebrow">Where to go</p>
+        <h2>Take the next step</h2>
+      </div>
+      <div class="grid three">
+        <a class="linkcard reveal" href="./guide.html">
+          <h3>Guide <span>→</span></h3>
+          <p>From the first <code>write_u32</code> to a length-prefixed frame, with the output of every snippet.</p>
+        </a>
+        <a class="linkcard reveal" href="./api.html">
+          <h3>API <span>→</span></h3>
+          <p>Every function, value and error of the five packages, generated from their interfaces.</p>
+        </a>
+        <a class="linkcard reveal" href="./bits.html">
+          <h3>Bit lab <span>→</span></h3>
+          <p>One value, bit by bit: which bits are prefix, which say "another octet follows", and what each encoding costs.</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <nav aria-label="Elsewhere">
+      <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
+      <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
+      <a href="./guide.html">Guide</a>
+      <a href="./api.html">API</a>
+    </nav>
+    <span>Made of water and integers.</span>
+  </div>
+</footer>
+
+</body>
+</html>

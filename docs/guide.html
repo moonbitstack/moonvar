@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide — moonvar</title>
+<meta name="description" content="A walk through moonvar: fixed widths and byte order, QUIC's two-bit width, HPACK's N-bit prefix, LEB128 with zigzag, MySQL's length-encoded integers, and a length-prefixed frame.">
+<meta name="theme-color" content="#dff1ef" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#072328" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+<script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+<script src="assets/site.js" defer></script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0' stop-color='%23b9fff0'/%3E%3Cstop offset='1' stop-color='%230a6a60'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='16' cy='16' r='13' fill='url(%23g)'/%3E%3C/svg%3E">
+</head>
+<body hx-boost="true" hx-target="#main" hx-select="#main" hx-swap="innerHTML show:window:top">
+
+<div class="pool" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="wrap bar">
+    <a class="brand" href="./">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">moonvar</span>
+      <span class="brand-sub">integers as octets</span>
+    </a>
+    <nav class="nav" aria-label="Site">
+      <a href="./guide.html" aria-current="page">Guide</a>
+      <a href="./api.html">API</a>
+      <a href="./bits.html">Bit lab</a>
+      <a class="gh" href="https://github.com/moonbitstack/moonvar" aria-label="Source on GitHub" title="Source on GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8a8 8 0 0 0 5.47 7.59c.4.07.55-.17.55-.38v-1.33c-2.23.48-2.7-1.07-2.7-1.07-.36-.92-.89-1.17-.89-1.17-.73-.5.06-.49.06-.49.8.06 1.23.83 1.23.83.72 1.22 1.88.87 2.34.66.07-.52.28-.87.5-1.07-1.78-.2-3.65-.89-3.65-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48v2.2c0 .21.15.46.55.38A8 8 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+      </a>
+      <button class="themebtn" type="button" aria-label="Switch theme">☀</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+<div class="wrap doc">
+
+  <aside class="toc" aria-label="Contents">
+    <p>Chapters</p>
+    <a href="#install">01 · Install</a>
+    <a href="#fixed">02 · Fixed widths</a>
+    <a href="#carried">03 · Widths carried</a>
+    <a href="#quic">04 · QUIC</a>
+    <a href="#prefix">05 · HPACK prefix</a>
+    <a href="#leb128">06 · LEB128</a>
+    <a href="#lenenc">07 · MySQL</a>
+    <a href="#failure">08 · Failure</a>
+    <a href="#frame">09 · A frame</a>
+  </aside>
+
+  <div>
+
+    <section class="chapter" id="top">
+      <p class="eyebrow">Guide</p>
+      <h1 style="font-size:clamp(2rem,4vw,3rem);margin-bottom:0.7rem">From a number to a wire</h1>
+      <p class="lede">
+        Nine chapters, in the order a packet meets them: the octets a number becomes, the
+        five rules that decide how, and what each reader does when the bytes run out.
+        Every snippet compiles against the packages as they ship, and every output below
+        was printed by the code above it.
+      </p>
+    </section>
+
+    <section class="chapter" id="install">
+      <h2><span class="num">01</span>Install, and the first four octets</h2>
+      <p>One package per encoding, so you add the module and import what you need.</p>
+
+      <div class="code">
+        <div class="code-bar"><span>shell</span><button class="copy" type="button">copy</button></div>
+        <pre><code>moon add moonbitstack/moonvar</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-bar"><span>moon.pkg</span><button class="copy" type="button">copy</button></div>
+        <pre><code>import {
+  "moonbitstack/moonvar/fixed",
+}</code></pre>
+      </div>
+
+      <p>
+        A number going onto a wire is a run of octets, and the rest of this guide prints
+        them as hex. This helper is the only thing in the guide that is not from the
+        library; it stays the same throughout.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>hex.mbt</span><button class="copy" type="button">copy</button></div>
+        <pre><code>/// Octets as hex, two digits each.
+fn hex(b : BytesView) -> String {
+  let digits = "0123456789abcdef"
+  let out = StringBuilder()
+  for i = 0; i &lt; b.length(); i = i + 1 {
+    let octet = b[i].to_int()
+    out.write_char(digits[octet &gt;&gt; 4].unsafe_to_char())
+    out.write_char(digits[octet &amp; 0xf].unsafe_to_char())
+  }
+  out.to_string()
+}</code></pre>
+      </div>
+
+      <p>A thirty-two-bit value, written and read back:</p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>let buf = Buffer()
+@fixed.write_u32(buf, 0x12345678)
+let wire = buf.to_bytes()
+println(hex(wire[:]))
+println(@fixed.read_u32(wire[:]))</code></pre>
+      </div>
+
+      <div class="out term">12345678
+Some(305419896)</div>
+
+      <p>
+        Eight hex digits, one per nibble, most significant first. That order is the
+        default and it is big-endian, which is what RFC 1700 calls network byte order.
+      </p>
+    </section>
+
+    <section class="chapter" id="fixed">
+      <h2><span class="num">02</span>Fixed widths, and the order to read them in</h2>
+      <p>
+        Every reader takes <code>at~</code>, the octet it starts from, and
+        <code>order~</code>, which way round the octets go. Every writer takes a
+        <code>Buffer</code> and appends.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>let buf = Buffer()
+@fixed.write_u16(buf, 513)
+@fixed.write_u16(buf, 513, order=Little)
+@fixed.write_u24(buf, 0x010203)
+let wire = buf.to_bytes()
+println(hex(wire[:]))
+println(@fixed.read_u16(wire[:]))
+println(@fixed.read_u16(wire[:], at=2, order=Little))
+println(@fixed.read_u24(wire[:], at=4))
+println(@fixed.read_u32(wire[:], at=14))</code></pre>
+      </div>
+
+      <div class="out term">02010102010203
+Some(513)
+Some(513)
+Some(66051)
+None</div>
+
+      <p>
+        513 is <code>0x0201</code>; four octets carry it either way round. The 24-bit
+        width is the one TLS writes a handshake message in and HTTP/2 writes a frame in,
+        so it is here even though no machine has a 24-bit register.
+      </p>
+      <p>
+        The last line asks for four octets at offset 14 in a seven-octet view. There is no
+        such value, and the answer is <code>None</code> rather than a wrapped offset or a
+        read past the end. Every reader in this package is built the same way.
+      </p>
+    </section>
+
+    <section class="chapter" id="carried">
+      <h2><span class="num">03</span>Widths the caller carries</h2>
+      <p>
+        Some protocols spell their own width — <code>int&lt;3&gt;</code>, a three-octet DNS
+        length — and the caller only learns it at run time. <code>read_uint</code> and
+        <code>write_uint</code> take that width as an argument and work for one to eight
+        octets.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>let buf = Buffer()
+@fixed.write_uint(buf, 0x010203UL, size=3)
+@fixed.write_f64(buf, 1.5)
+@fixed.write_i16(buf, -2)
+let wire = buf.to_bytes()
+println(hex(wire[:]))
+println(@fixed.read_uint(wire[:], size=3))
+println(@fixed.read_f64(wire[:], at=3))
+println(@fixed.read_i16(wire[:], at=11))
+println(@fixed.size(0x010203UL))</code></pre>
+      </div>
+
+      <div class="out term">0102033ff8000000000000fffe
+Some(66051)
+Some(1.5)
+Some(-2)
+3</div>
+
+      <p>
+        <code>1.5</code> is the IEEE-754 double <code>3ff8000000000000</code>, written
+        through <code>write_f64</code> and read back by reinterpreting the bits rather than
+        converting them, which is what a wire format means by a float. <code>-2</code> is
+        two's complement, and <code>size</code> says three octets are enough for
+        <code>0x010203</code> — no writing, just the width.
+      </p>
+    </section>
+
+    <section class="chapter" id="quic">
+      <h2><span class="num">04</span>QUIC: two bits say how wide</h2>
+      <p>
+        RFC 9000 §16 puts the width in the first two bits: <code>00</code> is one octet
+        with six bits of value, <code>01</code> two octets with fourteen, <code>10</code>
+        four with thirty, <code>11</code> eight with sixty-two. Everything else is the
+        value, big-endian.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(hex(@quic.encode(1337UL)[:]))
+println(hex(@quic.encode(1UL)[:]))
+println(hex(@quic.encode(1UL &lt;&lt; 30)[:]))
+println(@quic.size(1UL &lt;&lt; 30))
+println(@quic.decode(b"\x45\x39"[:]))
+println(@quic.decode(b"\x45"[:]))
+println(@quic.max)</code></pre>
+      </div>
+
+      <div class="out term">4539
+01
+c000000040000000
+8
+Some((1337, 2))
+None
+4611686018427387903</div>
+
+      <p>
+        <code>0x45</code> is <code>0100 0101</code>: prefix <code>01</code> for two
+        octets, then the top six bits of the value. <code>1337</code> is
+        <code>0x539</code>, which needs those six bits and the second octet.
+      </p>
+      <p>
+        The second decode is handed one octet of a value that declares two.
+        <code>None</code> — the reader will not invent the missing octet.
+        <code>max</code> is the ceiling the two-bit prefix allows: sixty-two bits.
+      </p>
+    </section>
+
+    <section class="chapter" id="prefix">
+      <h2><span class="num">05</span>HPACK: a value in the low N bits</h2>
+      <p>
+        RFC 7541 §5.1 packs a value into the low bits of the first octet and lets it
+        continue into further octets when it does not fit. The bits above the prefix
+        belong to the field, and you pass them in as <code>flags</code>.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(hex(@prefix.encode(10, prefix=5)[:]))
+println(hex(@prefix.encode(1337, prefix=5)[:]))
+println(hex(@prefix.encode(1337, prefix=5, flags=0x80)[:]))
+println(@prefix.size(1337, prefix=5))
+println(@prefix.decode(b"\x9f\x9a\x0a"[:], prefix=5))
+println(@prefix.flagged(b"\x9f\x9a\x0a"[:]))
+println(@prefix.limit)</code></pre>
+      </div>
+
+      <div class="out term">0a
+1f9a0a
+9f9a0a
+3
+(1337, 3)
+true
+2147483647</div>
+
+      <p>
+        Ten fits: <code>0x0a</code> is the value itself. 1337 does not, so the first octet
+        saturates at the five-bit ceiling (31) and the remainder follows in seven-bit
+        continuation octets. <code>flags=0x80</code> sets the high bit of the first octet —
+        in HPACK that bit says the string after the length is Huffman-coded — and
+        <code>decode</code> masks it off, which is why the same three octets read back as
+        1337 both times.
+      </p>
+      <p>
+        <code>flagged</code> reads that one bit without decoding anything, for the case
+        where the caller only needs to know. <code>limit</code> is the ceiling of the
+        reader here, a positive <code>Int</code>; §5.1 leaves the ceiling to the
+        implementation and asks for a decoding error past it.
+      </p>
+    </section>
+
+    <section class="chapter" id="leb128">
+      <h2><span class="num">06</span>LEB128: seven bits an octet</h2>
+      <p>
+        The encoding protobuf calls base 128 varints, and DWARF calls unsigned LEB128:
+        seven bits per octet, least significant group first, with the eighth bit set on
+        every octet except the last.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(hex(@leb128.encode(1UL)[:]))
+println(hex(@leb128.encode(150UL)[:]))
+println(hex(@leb128.encode(0xffffffffffffffffUL)[:]))
+println(@leb128.size(150UL))
+println(@leb128.decode(b"\x96\x01"[:]))
+println(@leb128.limit)</code></pre>
+      </div>
+
+      <div class="out term">01
+9601
+ffffffffffffffffff01
+2
+(150, 2)
+10</div>
+
+      <p>
+        150 is <code>0x96 0x01</code>: <code>0x96</code> carries the low seven bits with
+        the continuation bit set, <code>0x01</code> the next seven with it clear. A
+        sixty-four-bit value takes ten octets, and <code>limit</code> is ten, which is what
+        stops a reader following continuation bits for as long as a peer cares to send
+        them.
+      </p>
+      <p>
+        Signed values are folded onto unsigned ones first, so a small negative number stays
+        short. Without it, <code>-1</code> would sign-extend to sixty-four bits and take all
+        ten octets.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(@leb128.zigzag(-2L))
+println(@leb128.unzigzag(3UL))</code></pre>
+      </div>
+
+      <div class="out term">3
+-2</div>
+
+      <p>
+        <code>zigzag</code> maps 0 to 0, -1 to 1, 1 to 2, -2 to 3. <code>unzigzag</code>
+        undoes it with a logical shift, so the top half of the signed range comes back
+        intact instead of with its sign smeared.
+      </p>
+    </section>
+
+    <section class="chapter" id="lenenc">
+      <h2><span class="num">07</span>MySQL: a marker octet</h2>
+      <p>
+        MySQL's length-encoded integer spends one octet on anything below 251. Above that,
+        the first octet is a marker saying how many little-endian octets follow:
+        <code>0xfc</code> two, <code>0xfd</code> three, <code>0xfe</code> eight.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(hex(@lenenc.encode(250UL)[:]))
+println(hex(@lenenc.encode(251UL)[:]))
+println(hex(@lenenc.encode(65536UL)[:]))
+println(hex(@lenenc.encode(1UL &lt;&lt; 24)[:]))
+println(@lenenc.decode(b"\xfc\x39\x05"[:]))
+println(@lenenc.size(65536UL))</code></pre>
+      </div>
+
+      <div class="out term">fa
+fcfb00
+fd000001
+fe0000000100000000
+(1337, 3)
+4</div>
+
+      <p>
+        250 is still bare, so <code>0xfb</code> and everything above it is free to mean
+        something else. 251 needs the marker and two octets: <code>fc fb 00</code>, little
+        end. 1337 arrives as <code>fc 39 05</code> — <code>0x0539</code>, low octet first.
+      </p>
+      <p>
+        This is the one encoding in the module that writes its payload little-endian, and
+        it says so by where the marker sits rather than by an <code>order</code> argument.
+      </p>
+    </section>
+
+    <section class="chapter" id="failure">
+      <h2><span class="num">08</span>Failure is a value</h2>
+      <p>
+        The fixed readers answer <code>None</code>. The variable-length readers raise
+        <code>Refused</code>, a suberror each package declares, because a truncation and a
+        value past the ceiling are different faults and a caller often wants to tell them
+        apart.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>try {
+  let (v, n) = @leb128.decode(b"\x80"[:])
+  println("\{v} in \{n} octets")
+} catch {
+  Truncated(m) =&gt; println("truncated: " + m)
+  Exceeded(limit~, got~) =&gt; println("past \{limit} octets: \{got}")
+}</code></pre>
+      </div>
+
+      <div class="out term">truncated: the value continues past the end</div>
+
+      <p>
+        <code>0x80</code> sets the continuation bit and then stops, so the value continues
+        past the end of the view. The same message comes with the fault attached: the
+        error's <code>Show</code> prints <code>Truncated(the value continues past the
+        end)</code>, which is what you want in a log line.
+      </p>
+      <p>
+        A first octet the protocol reserves is its own fault. <code>0xfb</code> is NULL in a
+        row and <code>0xff</code> begins an error packet; neither is a length, and a reader
+        that took one for a length would be off by however much followed.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>try {
+  let (v, _) = @lenenc.decode(b"\xfb"[:])
+  println(v)
+} catch {
+  Truncated(m) =&gt; println("truncated: " + m)
+  Reserved(got~) =&gt; println("reserved first octet: \{got}")
+}</code></pre>
+      </div>
+
+      <div class="out term">reserved first octet: 251</div>
+    </section>
+
+    <section class="chapter" id="frame">
+      <h2><span class="num">09</span>Putting it together: a frame</h2>
+      <p>
+        A length in front of a payload is the shape most protocols actually send. The
+        length's own width depends on the length, which is why <code>size</code> exists and
+        why a two-bit width prefix earns its keep.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>fn frame(payload : BytesView) -&gt; Bytes {
+  let buf = Buffer()
+  buf.write_bytes(@quic.encode(payload.length().to_uint64()))
+  buf.write_bytes(payload.to_owned())
+  buf.to_bytes()
+}
+
+fn unframe(b : BytesView) -&gt; Bytes? {
+  match @quic.decode(b) {
+    Some((len, n)) =&gt;
+      if b.length() - n &gt;= len.to_int() {
+        Some(b[n:n + len.to_int()].to_owned())
+      } else {
+        None
+      }
+    None =&gt; None
+  }
+}</code></pre>
+      </div>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>let framed = frame(b"\x01\x02\x03\x04\x05"[:])
+println(hex(framed[:]))
+match unframe(framed[:]) {
+  Some(payload) =&gt; println(hex(payload[:]))
+  None =&gt; println("nothing")
+}
+println(unframe(b"\x05\x01\x02"[:]))
+println(hex(frame(Bytes::make(70000, b'\x00'))[:3]))</code></pre>
+      </div>
+
+      <div class="out term">050102030405
+0102030405
+None
+800111</div>
+
+      <p>
+        Five octets of payload, one octet of length. The second frame claims five octets
+        and brings two, so <code>unframe</code> answers <code>None</code> instead of
+        returning half a payload.
+      </p>
+      <p>
+        The last line is a seventy-thousand octet payload. Its length no longer fits in six
+        bits, so the first octet becomes <code>0x80</code> — prefix <code>10</code>, four
+        octets of length — and <code>800111</code> is the first three of them. Nothing in
+        the writer had to say how wide it was going to be.
+      </p>
+    </section>
+
+    <section class="chapter" id="end">
+      <h2>Where the guide stops</h2>
+      <p>
+        That is the whole surface: five encodings, each a package, each with an encoder, a
+        reader, a <code>size</code> and its own idea of what a bad input is. The
+        <a href="./api.html">reference</a> has every signature; the
+        <a href="./bits.html">bit lab</a> shows the same octets one bit at a time.
+      </p>
+      <div class="callout">
+        <b>Rule of thumb.</b> If the wire names a protocol in its specification — QUIC,
+        HPACK, protobuf, MySQL — import that package and pass its rules. If the wire just
+        names a width, <code>fixed</code> is the one, with <code>order=Little</code> where
+        the format says so.
+      </div>
+    </section>
+
+  </div>
+</div>
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <nav aria-label="Elsewhere">
+      <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
+      <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
+      <a href="./api.html">API</a>
+      <a href="./bits.html">Bit lab</a>
+    </nav>
+    <span>Made of water and integers.</span>
+  </div>
+</footer>
+
+</body>
+</html>

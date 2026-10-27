@@ -1,0 +1,5 @@
+import {
+  "moonbitstack/moonvar/quic",
+}
+
+pkgtype(kind: "executable")

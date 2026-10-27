@@ -1,0 +1,11 @@
+import {
+  "moonbitstack/moonvar/fixed",
+  "moonbitstack/moonvar/leb128",
+  "moonbitstack/moonvar/lenenc",
+  "moonbitstack/moonvar/prefix",
+  "moonbitstack/moonvar/quic",
+}
+
+options(
+  link: { "js": { "exports": [ "probe", "scan" ], "format": "esm" } },
+)

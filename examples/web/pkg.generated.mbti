@@ -1,0 +1,15 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonvar/examples/web"
+
+// Values
+pub fn probe(String, Int32) -> String
+
+pub fn scan(String, Int32) -> String
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
