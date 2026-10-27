@@ -601,20 +601,22 @@ b, .num, .octet, .ledger b, .cost-n, .lab-sum, .row-meta, td.mono {
 
 .gh {
   display: inline-flex;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   color: var(--ink-2);
   transition: color 0.15s, background 0.15s;
 }
-.gh svg { width: 17px; height: 17px; fill: currentColor; }
+/* The mark is drawn inside a 16-unit box with a little air around it, so it
+   needs a size or two more than a filled glyph to weigh the same. */
+.gh svg { width: 21px; height: 21px; fill: currentColor; }
 .gh:hover { background: var(--fill-2); color: var(--ink); }
 
 .themebtn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: inline-grid;
   place-items: center;
   border-radius: 999px;
@@ -2064,7 +2066,7 @@ footer.site::before {
   .nav { font-size: 0.7rem; gap: 0; }
   .nav a { padding: 0.38rem 0.42rem; white-space: nowrap; }
   .nav a[aria-current="page"]::before { display: none; }
-  .nav .gh { width: 28px; }
+  .nav .gh { width: 30px; height: 30px; }
   .brand-name { font-size: 1.04rem; }
   .ledger { grid-template-columns: 1fr; }
   .num { width: 100%; }
