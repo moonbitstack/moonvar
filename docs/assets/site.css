@@ -1192,21 +1192,20 @@ section { padding: 3.6rem 0; }
   border-color: color-mix(in oklab, var(--hue) 22%, var(--glass-line));
 }
 
-/* The five read as one set: squared at the top, so the band of each
-   package's colour runs the full width instead of being eaten by the corner
-   radius, and rounded at the foot like every other card on the page. */
+/* The mark of a package: a band of its colour along the top, leaving the
+   card at the left edge in a square corner so the band starts where it says
+   it starts. The other three corners keep the radius of every card here. */
 .pkg-card {
-  border-radius: 0 0 var(--r) var(--r);
+  border-radius: 0 var(--r) var(--r) var(--r);
 }
 .pkg-card::before {
   content: "";
   position: absolute;
   inset: 0 0 auto;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(90deg,
-    color-mix(in oklab, var(--hue) 92%, transparent) 0%,
-    color-mix(in oklab, var(--hue) 52%, transparent) 58%,
-    color-mix(in oklab, var(--hue) 10%, transparent) 100%);
+    color-mix(in oklab, var(--hue) 70%, transparent),
+    color-mix(in oklab, var(--hue) 6%, transparent) 72%);
 }
 .pkg-card[data-pkg="quic"] { --hue: var(--h-quic); }
 .pkg-card[data-pkg="prefix"] { --hue: var(--h-prefix); }
