@@ -1,0 +1,9 @@
+# Text is stored with LF whatever the editor writes, so a change of platform
+# never shows up as a diff of every line.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.woff binary
+*.woff2 binary
