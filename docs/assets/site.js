@@ -4,6 +4,11 @@
 (function () {
   const root = document.documentElement;
 
+  // The reveal below hides a section until it scrolls into view. That is a
+  // decoration, so it is switched on only when this file runs: with scripting
+  // off the pages are simply visible.
+  root.classList.add("js");
+
   /* ---- theme --------------------------------------------------------- */
 
   const saved = localStorage.getItem("moonvar-theme");

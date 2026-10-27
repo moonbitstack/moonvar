@@ -142,7 +142,7 @@ function bitsHTML(bytes, cells) {
       return `<div class="bite">
           <div class="bite-head"><b>${String(i + 1).padStart(2, "0")}</b>
             <span>0x${byte.toString(16).padStart(2, "0")}</span></div>
-          <div class="bits">${bits}</div>
+          <div class="bits">${bits}<span class="bite-dec">= ${byte}</span></div>
         </div>`;
     })
     .join("");

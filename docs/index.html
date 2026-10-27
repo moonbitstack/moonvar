@@ -46,6 +46,13 @@
       <div class="hero-copy">
         <p class="eyebrow">Five encodings · five packages · no dependencies</p>
         <h1>A number, written<br>down as <span class="drop">octets</span>.</h1>
+        <ul class="hero-bytes" aria-label="1337 in each of the five encodings">
+          <li style="--hue:var(--h-quic)"><i>quic</i><b>45 39</b></li>
+          <li style="--hue:var(--h-prefix)"><i>prefix</i><b>1f 9a 0a</b></li>
+          <li style="--hue:var(--h-leb128)"><i>leb128</i><b>b9 0a</b></li>
+          <li style="--hue:var(--h-lenenc)"><i>lenenc</i><b>fc 39 05</b></li>
+          <li style="--hue:var(--h-fixed)"><i>fixed</i><b>05 39</b></li>
+        </ul>
       </div>
       <div class="hero-side">
         <p class="lede">
@@ -120,27 +127,27 @@
         <p>1337 below, in each encoding, from the live panel above. The difference is not style: each rule is what some wire already expects.</p>
       </div>
       <div class="grid five">
-        <div class="card pkg-card reveal">
+        <div class="card pkg-card reveal" data-pkg="quic">
           <h3>quic</h3>
           <p class="rule">Two bits name the width — one, two, four or eight octets — and the rest carry the value, big-endian.</p>
           <div class="eg">1337 → <b>45 39</b></div>
         </div>
-        <div class="card pkg-card reveal">
+        <div class="card pkg-card reveal" data-pkg="prefix">
           <h3>prefix</h3>
           <p class="rule">A value in the low N bits of the first octet, spilling into continuation octets when it does not fit.</p>
           <div class="eg">1337 → <b>1f 9a 0a</b></div>
         </div>
-        <div class="card pkg-card reveal">
+        <div class="card pkg-card reveal" data-pkg="leb128">
           <h3>leb128</h3>
           <p class="rule">Seven bits an octet, least significant group first, one bit in each saying whether another follows.</p>
           <div class="eg">1337 → <b>b9 0a</b></div>
         </div>
-        <div class="card pkg-card reveal">
+        <div class="card pkg-card reveal" data-pkg="lenenc">
           <h3>lenenc</h3>
           <p class="rule">One octet below 251; above it a marker octet and two, three or eight little-endian octets.</p>
           <div class="eg">1337 → <b>fc 39 05</b></div>
         </div>
-        <div class="card pkg-card reveal">
+        <div class="card pkg-card reveal" data-pkg="fixed">
           <h3>fixed</h3>
           <p class="rule">The widths a machine has, plus the 24-bit length protocols use, in either byte order.</p>
           <div class="eg">1337 → <b>05 39</b></div>
