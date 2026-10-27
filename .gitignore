@@ -3,6 +3,4 @@
 !.moonignore
 _*
 target/
-
-# built by the docs workflow, not checked in
 docs/assets/moonvar.js

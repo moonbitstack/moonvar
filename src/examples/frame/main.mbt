@@ -2,7 +2,7 @@
 // holding the payload's length, then the payload. The length's own width is not
 // known until the payload is, which is what `quic.size` is for.
 //
-//     moon run examples/frame
+//     moon run src/examples/frame
 
 ///|
 #coverage.skip

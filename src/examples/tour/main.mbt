@@ -1,7 +1,7 @@
 ///|
 /// One number, written five ways, and read back.
 ///
-///     moon run examples/tour
+///     moon run src/examples/tour
 #coverage.skip
 fn main {
   // The fixed widths: the octets go in the order you ask for, and reading a view that

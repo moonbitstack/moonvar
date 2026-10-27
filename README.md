@@ -88,12 +88,12 @@ import {
 
 | | |
 |:--|:--|
-| [`examples/tour`](examples/tour/main.mbt) | The whole surface in one run: every encoding, both directions, and the octet count each costs |
-| [`examples/frame`](examples/frame/main.mbt) | A length-prefixed frame — a varint length, then a payload — with the truncated case refused rather than half-read |
+| [`src/examples/tour`](src/examples/tour/main.mbt) | The whole surface in one run: every encoding, both directions, and the octet count each costs |
+| [`src/examples/frame`](src/examples/frame/main.mbt) | A length-prefixed frame — a varint length, then a payload — with the truncated case refused rather than half-read |
 
 ```bash
-moon run examples/tour
-moon run examples/frame
+moon run src/examples/tour
+moon run src/examples/frame
 ```
 
 ## Licence

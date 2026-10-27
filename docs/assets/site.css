@@ -599,10 +599,12 @@ b, .num, .octet, .ledger b, .cost-n, .lab-sum, .row-meta, td.mono {
   box-shadow: 0 0 6px -1px color-mix(in oklab, var(--accent) 90%, transparent);
 }
 
-.gh {
+.nav .gh {
   display: inline-flex;
   width: 32px;
   height: 32px;
+  padding: 0;
+  flex: none;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
@@ -611,7 +613,7 @@ b, .num, .octet, .ledger b, .cost-n, .lab-sum, .row-meta, td.mono {
 }
 /* The mark is drawn inside a 16-unit box with a little air around it, so it
    needs a size or two more than a filled glyph to weigh the same. */
-.gh svg { width: 21px; height: 21px; fill: currentColor; }
+.gh svg { width: 21px; height: 21px; flex: none; fill: currentColor; }
 .gh:hover { background: var(--fill-2); color: var(--ink); }
 
 .themebtn {
@@ -2084,3 +2086,5 @@ footer.site::before {
   .hero-bytes li:hover, .themebtn:hover { transform: none; }
   .grid > .reveal.in:nth-child(n) { transition-delay: 0ms; }
 }
+
+html, button, input, textarea, select { font-variant-ligatures: no-contextual; }
