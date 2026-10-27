@@ -1409,7 +1409,8 @@ td b { font-weight: 650; }
 .out {
   position: relative;
   margin: 0.15rem 0 1.6rem;
-  padding: 0.7rem 0.95rem 0.72rem 1.05rem;
+  /* Room above the text for the "output" label drawn by ::after. */
+  padding: 1.55rem 1rem 0.78rem 1.1rem;
   border-left: 1px solid color-mix(in oklab, var(--accent) 34%, transparent);
   border-radius: 0 12px 12px 0;
   background: color-mix(in oklab, var(--accent) 4%, color-mix(in oklab, white 42%, transparent));
