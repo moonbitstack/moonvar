@@ -9,10 +9,11 @@
 /// than the implementation's limit a decoding error, and an encoding of the same value in
 /// more octets than necessary is one too — a receiver that read either would disagree
 /// with the sender about what came next.
+#derive(Eq, Debug)
 pub(all) suberror Refused {
   Truncated(String)
   Exceeded(limit~ : Int64, got~ : Int64)
-} derive(Eq, Debug)
+}
 
 ///|
 /// A refusal prints as the fault it is.

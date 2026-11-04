@@ -4,10 +4,11 @@
 ///|
 /// Why a value was refused: it continues past the end of what it was given, or past the
 /// ten octets sixty-four bits can occupy.
+#derive(Eq, Debug)
 pub(all) suberror Refused {
   Truncated(String)
   Exceeded(limit~ : Int32, got~ : Int32)
-} derive(Eq, Debug)
+}
 
 ///|
 /// A refusal prints as the fault it is.

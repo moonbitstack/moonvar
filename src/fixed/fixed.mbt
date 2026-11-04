@@ -3,10 +3,11 @@
 
 ///|
 /// Which end of a number goes first (RFC 1700 calls the big end "network byte order").
+#derive(Eq, Debug)
 pub(all) enum Order {
   Big
   Little
-} derive(Eq, Debug)
+}
 
 ///|
 /// Big-endian, because every protocol in reach of this package writes that way: IP and

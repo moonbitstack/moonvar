@@ -7,10 +7,11 @@
 ///
 /// `0xfb` is NULL in a row and `0xff` begins an error packet; neither is a number, and a
 /// reader that took one for a length would be off by however much followed.
+#derive(Eq, Debug)
 pub(all) suberror Refused {
   Truncated(String)
   Reserved(got~ : Int32)
-} derive(Eq, Debug)
+}
 
 ///|
 /// A refusal prints as the fault it is.

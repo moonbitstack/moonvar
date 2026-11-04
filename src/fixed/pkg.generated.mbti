@@ -62,10 +62,11 @@ pub fn write_uint(@buffer.Buffer, UInt64, size~ : Int32, order? : Order) -> Unit
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum Order {
   Big
   Little
-} derive(Eq, @debug.Debug)
+}
 pub fn Order::equal(Self, Self) -> Bool
 pub fn Order::not_equal(Self, Self) -> Bool
 pub fn Order::to_repr(Self) -> @debug.Repr
