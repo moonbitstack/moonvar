@@ -19,17 +19,18 @@
 ```moonbit
 // The fixed widths, either way round, reading nothing it was not given.
 let buf = Buffer()
-@fixed.write_u32(buf, 0x12345678)               // 12 34 56 78
-@fixed.write_u16(buf, 0x1234, order=Little)     // 34 12
+@fixed.write_u32(buf, 0x12345678)
+@fixed.write_u16(buf, 0x1234, order=Little)
 let wire = buf.to_bytes()
-@fixed.read_u32(wire[:])                        // Some(305419896)
-@fixed.read_u32(wire[:], at=10)                 // None, the view is shorter
+assert_eq(wire, b"\x12\x34\x56\x78\x34\x12")
+assert_eq(@fixed.read_u32(wire[:]), Some(305419896))
+assert_eq(@fixed.read_u32(wire[:], at=10), None) // the view is shorter
 
 // One number, in each protocol's own spelling.
-@quic.encode(1337UL)                            // 45 39
-@prefix.encode(1337, prefix=5)                  // 1f 9a 0a
-@leb128.encode(1337UL)                          // b9 0a
-@lenenc.encode(1337UL)                          // fc 39 05
+assert_eq(@quic.encode(1337UL), b"\x45\x39")
+assert_eq(@prefix.encode(1337, prefix=5), b"\x1f\x9a\x0a")
+assert_eq(@leb128.encode(1337UL), b"\xb9\x0a")
+assert_eq(@lenenc.encode(1337UL), b"\xfc\x39\x05")
 ```
 
 ## Packages
@@ -78,7 +79,7 @@ moon add moonbitstack/moonvar
 
 Then import the package whose wire you speak:
 
-```
+```moonbit
 import {
   "moonbitstack/moonvar/quic",
 }
