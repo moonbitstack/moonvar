@@ -88,6 +88,13 @@ fn refused(b : Bytes, p : Int32) -> Refused {
 }
 
 ///|
+test "panic: a negative value has no prefix encoding" {
+  // §5.1 counts from zero. Writing a negative one would put its sign bits into the
+  // octets a reader takes for the field's flags.
+  let _ = encode(-1, prefix=5)
+}
+
+///|
 test "the offset is where reading starts" {
   let b = b"\xff\xff\x9a\x0a"
   assert_eq(decode(b[:], at=1, prefix=5), (1337, 3))

@@ -52,6 +52,11 @@ pub let limit : Int64 = 0x7fffffffL
 /// The three worked examples of Appendix C: ten in a five-bit prefix is one octet,
 /// 1337 in five bits is three, and forty-two at an octet boundary is one.
 pub fn encode(v : Int32, prefix~ : Int32, flags~ : Int32 = 0) -> Bytes {
+  if v < 0 {
+    // §5.1 counts from zero, and the octets of a negative value would read back as a
+    // different number: there is nothing here to write.
+    abort("a prefix integer is not negative")
+  }
   let buf = Buffer()
   let ceiling = (1 << prefix) - 1
   if v < ceiling {
