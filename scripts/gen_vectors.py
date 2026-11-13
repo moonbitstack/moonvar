@@ -627,8 +627,8 @@ def main():
         if stale:
             print("run python3 scripts/gen_vectors.py")
             return 1
-    rows = sum(text.count("UL,") + text.count('L, "') for text in files.values())
-    print(f"{len(files)} vector files, about {rows} cases")
+    cases = sum(text.count("\n  (") for text in files.values())
+    print(f"{len(files)} vector tables, {cases} cases")
     return 0
 
 
