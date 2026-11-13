@@ -104,3 +104,34 @@ test "the ceiling is sixty-two bits" {
   assert_eq(back, max)
   assert_eq(n, 8)
 }
+
+///|
+test "panic: a value above the ceiling has no encoding" {
+  // The first two bits of 2^62 would be read as the width prefix, so the octets would
+  // come back as a different number rather than as a refusal.
+  let _ = encode(max + 1UL)
+}
+
+///|
+test "writing appends, and reading starts at the offset" {
+  let buf = Buffer()
+  write(buf, 37UL)
+  write(buf, 15293UL)
+  write(buf, max)
+  assert_eq(qv_hex(buf.to_bytes()), "257bbdffffffffffffffff")
+  let b = buf.to_bytes()
+  assert_eq(decode(b[:]), Some((37UL, 1)))
+  assert_eq(decode(b[:], at=1), Some((15293UL, 2)))
+  assert_eq(decode(b[:], at=3), Some((max, 8)))
+  assert_eq(decode(b[:], at=11), None)
+  // A frame after the first field is where the second starts, which is the whole point
+  // of being told how many octets the first took.
+  guard decode(b[:]) is Some((_, n)) else {
+    fail("the first field should read")
+  }
+  assert_eq(encode(37UL), b[:n].to_owned())
+  // Out-of-range offsets answer rather than read past either end.
+  assert_eq(decode(b""[:], at=0), None)
+  assert_eq(decode(b[:], at=-1), None)
+  assert_eq(decode(b[:], at=b.length()), None)
+}

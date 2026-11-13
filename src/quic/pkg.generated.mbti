@@ -1,14 +1,20 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "moonbitstack/moonvar/quic"
 
+import {
+  "moonbitlang/core/buffer",
+}
+
 // Values
-pub fn decode(BytesView) -> (UInt64, Int32)?
+pub fn decode(BytesView, at? : Int32) -> (UInt64, Int32)?
 
 pub fn encode(UInt64) -> Bytes
 
 pub let max : UInt64
 
 pub fn size(UInt64) -> Int32
+
+pub fn write(@buffer.Buffer, UInt64) -> Unit
 
 // Errors
 
