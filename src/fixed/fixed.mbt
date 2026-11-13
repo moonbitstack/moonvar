@@ -356,6 +356,39 @@ pub fn size(v : UInt64) -> Int32 {
 }
 
 ///|
+/// `v` as the fewest octets that hold it, which is what `size` measures.
+///
+/// Some formats carry a number with no width agreed in advance — a length in an e-mail
+/// header, an index in a file — and a reader of one has to take the run it is given as
+/// the whole number, which is `decode`. The pair is the mirror image of the named widths:
+/// the same octets, with the length left out of the signature.
+pub fn encode(v : UInt64, order~ : Order = order) -> Bytes {
+  let buf = Buffer()
+  write_uint(buf, v, size=size(v), order~)
+  buf.to_bytes()
+}
+
+///|
+/// The value the whole of `b` from `at` carries, which is one to eight octets.
+///
+/// `None` when there are no octets there, or more than eight: a run that long does not
+/// fit the value this answers with, and truncating it would be a number nobody wrote.
+pub fn decode(
+  b : BytesView,
+  at~ : Int32 = 0,
+  order~ : Order = order,
+) -> UInt64? {
+  if at < 0 || at > b.length() {
+    return None
+  }
+  let octets = b.length() - at
+  if octets < 1 || octets > 8 {
+    return None
+  }
+  read_uint(b, at~, size=octets, order~)
+}
+
+///|
 pub extend Order with Debug::{to_repr}
 
 ///|

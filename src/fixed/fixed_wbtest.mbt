@@ -236,3 +236,37 @@ test "the width a value needs is one octet per eight bits it occupies" {
     )
   }
 }
+
+///|
+test "a value written with no width agreed in advance" {
+  // `encode` writes exactly the octets `size` counts, in the order asked for.
+  assert_eq(hex(encode(0UL)), "00")
+  assert_eq(hex(encode(1UL)), "01")
+  assert_eq(hex(encode(0x010203UL)), "010203")
+  assert_eq(hex(encode(0x010203UL, order=Little)), "030201")
+  assert_eq(hex(encode(0xffffffffffffffffUL)), "ffffffffffffffff")
+  for v in [0UL, 1UL, 255UL, 256UL, 0x010203040506UL, 0xffffffffffffffffUL] {
+    assert_eq(encode(v).length(), size(v), msg="width of \{v}")
+    assert_eq(decode(encode(v)[:]), Some(v), msg="read back \{v}")
+    assert_eq(
+      decode(encode(v, order=Little)[:], order=Little),
+      Some(v),
+      msg="read back \{v} little-endian",
+    )
+  }
+}
+
+///|
+test "reading a run as one number refuses a length that is not a number" {
+  assert_eq(decode(b""[:]), None)
+  // Nine octets is past what a u64 holds; the reader will not return the low eight.
+  assert_eq(decode(hexb("010203040506070809")[:]), None)
+  assert_eq(decode(hexb("0102030405060708")[:]), Some(0x0102030405060708UL))
+  // The offset is where the run starts, and the run runs to the end of the view.
+  assert_eq(decode(hexb("ff0102")[:], at=1), Some(0x0102UL))
+  assert_eq(decode(hexb("ff0102")[:], at=3), None)
+  assert_eq(decode(hexb("ff0102")[:], at=4), None)
+  assert_eq(decode(hexb("ff0102")[:], at=-1), None)
+  // A run of one octet is one octet, not a truncated wider one.
+  assert_eq(decode(hexb("7f")[:]), Some(127UL))
+}

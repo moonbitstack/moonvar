@@ -7,6 +7,10 @@ import {
 }
 
 // Values
+pub fn decode(BytesView, at? : Int32, order? : Order) -> UInt64?
+
+pub fn encode(UInt64, order? : Order) -> Bytes
+
 pub let order : Order
 
 pub fn read_f32(BytesView, at? : Int32, order? : Order) -> Float?
