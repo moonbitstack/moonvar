@@ -1,0 +1,8 @@
+# The Python half of the references behind src/*/*_vectors_wbtest.mbt. Pinned, because a
+# new version of a reference that encodes something differently would turn up as a diff in
+# a generated table, which is the point: the tables are recomputed, not trusted.
+aioquic==1.8.0
+hpack==4.2.0
+leb128==1.0.9
+pyelftools==0.33
+PyMySQL==1.2.4

@@ -31,6 +31,12 @@ jobs:
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
           "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
 
+      - uses: actions/setup-go@v6
+        if: runner.os == 'Linux'
+        with:
+          go-version-file: scripts/vectors/go.mod
+          cache-dependency-path: scripts/vectors/go.sum
+
       - name: post install
         run: |
           moon version --all
@@ -53,6 +59,14 @@ jobs:
               moon run "$dir" --target native > /dev/null
             fi
           done
+
+      # The conformance tables are recomputed from implementations that are not this one, so
+      # a change of behaviour shows up as a diff even when every test still passes.
+      - name: the reference vectors reproduce
+        if: runner.os == 'Linux'
+        run: |
+          python3 -m pip install --quiet -r scripts/vectors-requirements.txt
+          python3 scripts/gen_vectors.py check
 
       - name: lint (fmt is clean)
         run: |
