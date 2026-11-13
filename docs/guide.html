@@ -201,6 +201,33 @@ Some(-2)
         two's complement, and <code>size</code> says three octets are enough for
         <code>0x010203</code> — no writing, just the width.
       </p>
+      <p>
+        A width the caller does not know either is <code>encode</code>: the fewest octets
+        that hold the value, which is exactly what <code>size</code> counted. Reading one
+        back takes the whole run, because the run is the number.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(hex(@fixed.encode(0x010203UL)[:]))
+println(hex(@fixed.encode(0x010203UL, order=Little)[:]))
+println(@fixed.decode(b"\x01\x02\x03"[:]))
+println(@fixed.decode(b"\x01\x02\x03"[:], order=Little))
+println(@fixed.decode(Bytes::make(9, b'\x00')[:]))</code></pre>
+      </div>
+
+      <div class="out term">010203
+030201
+Some(66051)
+Some(197121)
+None</div>
+
+      <p>
+        The same three octets are two numbers depending on which end the reader starts
+        from, and there is nothing in them to say which. Nine octets have no answer at all:
+        they do not fit the value this package reads, and half of them would be a number
+        nobody wrote.
+      </p>
     </section>
 
     <section class="chapter" id="quic">
@@ -240,6 +267,33 @@ None
         The second decode is handed one octet of a value that declares two.
         <code>None</code> — the reader will not invent the missing octet.
         <code>max</code> is the ceiling the two-bit prefix allows: sixty-two bits.
+      </p>
+      <p>
+        A packet is a run of these fields back to back, so the reader also takes an offset
+        and answers with how many octets it used. That count is what walks to the next
+        field.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>let buf = Buffer()
+@quic.write(buf, 37UL)
+@quic.write(buf, 15293UL)
+let wire = buf.to_bytes()
+println(hex(wire[:]))
+let (first, n) = @quic.decode(wire[:]).unwrap()
+println("\{first} in \{n} octets")
+println(@quic.decode(wire[:], at=n))</code></pre>
+      </div>
+
+      <div class="out term">257bbd
+37 in 1 octets
+Some((15293, 2))</div>
+
+      <p>
+        <code>37</code> is one octet and <code>15293</code> is two, so the second field
+        starts at one. Nothing here had to be told the widths: each field's first two bits
+        carried them.
       </p>
     </section>
 
@@ -337,6 +391,35 @@ println(@leb128.unzigzag(3UL))</code></pre>
         <code>zigzag</code> maps 0 to 0, -1 to 1, 1 to 2, -2 to 3. <code>unzigzag</code>
         undoes it with a logical shift, so the top half of the signed range comes back
         intact instead of with its sign smeared.
+      </p>
+      <p>
+        Folding the sign is one way to write a signed value. DWARF and WebAssembly do it
+        another way, and the octets differ: they keep the sign in the last group's top bit,
+        so <code>-2</code> is <code>7e</code> rather than <code>03</code>. The reader has
+        to be told which of the two it is holding — <code>7e</code> is 126 unsigned.
+      </p>
+
+      <div class="code">
+        <div class="code-bar"><span>moonbit</span><button class="copy" type="button">copy</button></div>
+        <pre><code>println(hex(@leb128.encode_signed(-2L)[:]))
+println(hex(@leb128.encode_signed(64L)[:]))
+println(@leb128.decode_signed(b"\x7f"[:]))
+println(@leb128.decode_signed(b"\x40"[:]))
+println(@leb128.size_signed(-65L))</code></pre>
+      </div>
+
+      <div class="out term">7e
+c000
+(-1, 1)
+(-64, 1)
+2</div>
+
+      <p>
+        <code>-2</code> fits one group: seven bits, sign bit clear of the value.
+        <code>64</code> does not, because its bit six is exactly where the sign lives, so
+        a second group carries zeroes. <code>7f</code> reads as <code>-1</code> and
+        <code>40</code> as <code>-64</code>, and <code>size_signed</code> counts what the
+        writer would produce without producing it.
       </p>
     </section>
 
@@ -506,7 +589,7 @@ None
 
 <footer class="site">
   <div class="wrap foot">
-    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <span>moonvar <!-- version -->0.2.2<!-- /version --> · Apache-2.0</span>
     <nav aria-label="Elsewhere">
       <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
       <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>

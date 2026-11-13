@@ -26,21 +26,30 @@ assert_eq(wire, b"\x12\x34\x56\x78\x34\x12")
 assert_eq(@fixed.read_u32(wire[:]), Some(305419896))
 assert_eq(@fixed.read_u32(wire[:], at=10), None) // the view is shorter
 
+// A number the format gives no width to: the fewest octets that hold it.
+assert_eq(@fixed.encode(1337UL), b"\x05\x39")
+assert_eq(@fixed.decode(b"\x05\x39"[:]), Some(1337))
+
 // One number, in each protocol's own spelling.
 assert_eq(@quic.encode(1337UL), b"\x45\x39")
 assert_eq(@prefix.encode(1337, prefix=5), b"\x1f\x9a\x0a")
 assert_eq(@leb128.encode(1337UL), b"\xb9\x0a")
 assert_eq(@lenenc.encode(1337UL), b"\xfc\x39\x05")
+
+// Signed values have two spellings, and they are not the same octets: protobuf folds the
+// sign onto an unsigned value, DWARF and WebAssembly keep it in the last group.
+assert_eq(@leb128.encode(@leb128.zigzag(-2L)), b"\x03")
+assert_eq(@leb128.encode_signed(-2L), b"\x7e")
 ```
 
 ## Packages
 
 | | Encoding | Written by |
 |:--|:--|:--|
-| `fixed` | Byte order for `u8`…`u64`, `i8`…`i64`, `f32`, `f64`, the 24-bit length protocols use, and a width carried in a variable | Everything |
+| `fixed` | Byte order for `u8`…`u64`, `i8`…`i64`, `f32`, `f64`, the 24-bit length protocols use, a width carried in a variable, and the fewest octets a value fits | Everything |
 | `quic` | Two bits name the width, sixty-two carry the value — [RFC 9000 §16](https://www.rfc-editor.org/rfc/rfc9000#section-16) | QUIC, HTTP/3 |
 | `prefix` | A value in the low N bits, continuing when it does not fit — [RFC 7541 §5.1](https://www.rfc-editor.org/rfc/rfc7541#section-5.1) | HPACK, QPACK |
-| `leb128` | Seven bits an octet, least significant first, plus zigzag for signed values | protobuf, DWARF |
+| `leb128` | Seven bits an octet, least significant first; zigzag for protobuf's signed values, and the signed form DWARF and WebAssembly write | protobuf, DWARF, WebAssembly |
 | `lenenc` | One octet below 251, otherwise a marker and two, three or eight little-endian octets | MySQL, MariaDB |
 
 Each package is separate and carries no dependency, so wanting protobuf's varint does
@@ -69,7 +78,11 @@ it with width.
   takes, without producing them. A length field has to be measured before the payload it
   describes is written.
 - **Signed values stay short.** `leb128.zigzag` folds a negative onto an unsigned value,
-  so `-1` costs one octet rather than ten.
+  so `-1` costs one octet rather than ten. `leb128.encode_signed` is the other spelling:
+  the sign in the last group, which is what DWARF and WebAssembly write.
+- **A value with no width agreed.** `fixed.encode` writes the fewest octets that hold a
+  number and `fixed.decode` reads a run as one — the pair for a length the format does not
+  put a width in front of.
 
 ## Install
 

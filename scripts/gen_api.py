@@ -4,7 +4,10 @@ in its sources, so the reference follows the code. Run from the repository root:
     python scripts/gen_api.py
 
 The output is committed; the docs workflow regenerates it and fails when the
-result differs from what is in the tree.
+result differs from what is in the tree. The same run fills the two numbers the
+pages carry — the count of public items, and the version — so neither is typed by
+hand, and it refuses to finish when an entry of an interface file is missing from
+the page it wrote.
 """
 
 import html
@@ -189,6 +192,59 @@ def prose(text):
     return f"<p>{text}</p>"
 
 
+def every_entry_listed(folder, page_body):
+    """Refuse a page that lost a public entry.
+
+    The generator reads declarations by pattern, so a shape it does not know — a
+    function with type parameters, a trait, a type alias — would quietly vanish from
+    the reference. Every `pub` line of the interface file has to leave a trace in the
+    page: an anchor of its own, or, for a trait method or an impl, the entry of the
+    type it belongs to.
+    """
+    missing = []
+    for raw in (SRC / folder / "pkg.generated.mbti").read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line.startswith("pub "):
+            continue
+        impl = re.match(r"^pub\s+impl\s+\w+(?:\[[^\]]*\])?\s+for\s+(\w+)", line)
+        if impl:
+            if f'id="{folder}-{impl.group(1)}"' not in page_body:
+                missing.append(line)
+            continue
+        decl = re.match(
+            r"^pub\s+(?:\(all\)|\(open\))?\s*"
+            r"(?:fn|let|type|typealias|trait|enum|struct|suberror)\s*"
+            r"(?:\[[^\]]*\])?\s*(\w+)",
+            line,
+        )
+        if not decl:
+            missing.append(line)
+            continue
+        name = decl.group(1)
+        if line.split(name, 1)[1].startswith("::"):
+            continue
+        if f'id="{folder}-{name}"' not in page_body:
+            missing.append(line)
+    return missing
+
+
+def fill_numbers(page_body, numbers):
+    """Put a number the page shows between `<!-- key -->` and `<!-- /key -->`."""
+    for key, value in numbers.items():
+        page_body = re.sub(
+            rf"(<!--\s*{key}\s*-->).*?(<!--\s*/\s*{key}\s*-->)",
+            lambda m, v=value: m.group(1) + v + m.group(2),
+            page_body,
+            flags=re.S,
+        )
+    return page_body
+
+
+def version():
+    text = (ROOT / "moon.mod").read_text(encoding="utf-8")
+    return re.search(r'^version\s*=\s*"([^"]+)"', text, re.M).group(1)
+
+
 def sig(text):
     return f'<pre class="sig">{html.escape(text.strip(), quote=False)}</pre>'
 
@@ -265,6 +321,9 @@ def render():
                     )
                 body.append("</div>")
         body.append("</section>")
+        missing = every_entry_listed(pkg, "\n".join(body))
+        if missing:
+            raise SystemExit(f"{pkg}: {len(missing)} entries are not on the page: {missing[:4]}")
 
     page = (ROOT / "docs" / "api.template.html").read_text(encoding="utf-8")
     count = f"{len(PACKAGES)} packages · {total} public items"
@@ -274,7 +333,15 @@ def render():
         .replace("<!-- count -->", count)
     )
     (ROOT / "docs" / "api.html").write_text(page, encoding="utf-8", newline="\n")
-    print(f"docs/api.html: {len(PACKAGES)} packages, {total} public items")
+
+    numbers = {"items": str(total), "version": version()}
+    for name in ("index.html", "guide.html", "bits.html"):
+        path = ROOT / "docs" / name
+        text = path.read_text(encoding="utf-8")
+        filled = fill_numbers(text, numbers)
+        if filled != text:
+            path.write_text(filled, encoding="utf-8", newline="\n")
+    print(f"docs: {len(PACKAGES)} packages, {total} public items, version {numbers['version']}")
 
 
 render()

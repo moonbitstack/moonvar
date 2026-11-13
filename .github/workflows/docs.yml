@@ -41,7 +41,7 @@ jobs:
           moon update
           moon info --target all
           python3 scripts/gen_api.py
-          git diff --exit-code docs/api.html
+          git diff --exit-code docs
           moon build --target js --release src/examples/web
           cp _build/js/release/build/examples/web/web.js docs/assets/moonvar.js
 

@@ -47,6 +47,8 @@
     <ol><li><a href="#fixed-top">fixed</a><ol class="sub">
 <li><a href="#fixed-Order">Order</a></li>
 <li><a href="#fixed-order">order</a></li>
+<li><a href="#fixed-encode">encode</a></li>
+<li><a href="#fixed-decode">decode</a></li>
 <li><a href="#fixed-read_f32">read_f32</a></li>
 <li><a href="#fixed-read_f64">read_f64</a></li>
 <li><a href="#fixed-read_i16">read_i16</a></li>
@@ -77,6 +79,7 @@
 <li><a href="#quic-max">max</a></li>
 <li><a href="#quic-encode">encode</a></li>
 <li><a href="#quic-decode">decode</a></li>
+<li><a href="#quic-write">write</a></li>
 <li><a href="#quic-size">size</a></li>
 </ol></li></ol>
 <ol><li><a href="#prefix-top">prefix</a><ol class="sub">
@@ -88,10 +91,14 @@
 <li><a href="#prefix-Refused">Refused</a></li>
 </ol></li></ol>
 <ol><li><a href="#leb128-top">leb128</a><ol class="sub">
+<li><a href="#leb128-encode_signed">encode_signed</a></li>
 <li><a href="#leb128-limit">limit</a></li>
+<li><a href="#leb128-size_signed">size_signed</a></li>
 <li><a href="#leb128-encode">encode</a></li>
 <li><a href="#leb128-decode">decode</a></li>
+<li><a href="#leb128-decode_signed">decode_signed</a></li>
 <li><a href="#leb128-write">write</a></li>
+<li><a href="#leb128-write_signed">write_signed</a></li>
 <li><a href="#leb128-size">size</a></li>
 <li><a href="#leb128-unzigzag">unzigzag</a></li>
 <li><a href="#leb128-zigzag">zigzag</a></li>
@@ -115,7 +122,7 @@
         compiler reports for the package, and the note under it is the one written beside the
         code; both come from the sources in this repository.
       </p>
-      <p class="tiny dim" style="margin-top:0.8rem">5 packages · 50 public items</p>
+      <p class="tiny dim" style="margin-top:0.8rem">5 packages · 57 public items</p>
     </header>
 
     <div class="api-filter">
@@ -138,6 +145,18 @@
 <h3><span class="kind">let</span>order</h3>
 <p>Big-endian, because every protocol in reach of this package writes that way: IP and everything over it, TLS, QUIC, HTTP/2 and HTTP/3. The exceptions are local formats — MySQL's wire protocol, most file headers — and they say so.</p>
 <pre class="sig">pub let order : Order</pre>
+</div>
+<h4 class="group">Encoding</h4>
+<div class="entry" id="fixed-encode">
+<h3><span class="kind">fn</span>encode</h3>
+<p><code>v</code> as the fewest octets that hold it, which is what <code>size</code> measures. Some formats carry a number with no width agreed in advance — a length in an e-mail header, an index in a file — and a reader of one has to take the run it is given as the whole number, which is <code>decode</code>. The pair is the mirror image of the named widths: the same octets, with the length left out of the signature.</p>
+<pre class="sig">pub fn encode(UInt64, order? : Order) -&gt; Bytes</pre>
+</div>
+<h4 class="group">Decoding</h4>
+<div class="entry" id="fixed-decode">
+<h3><span class="kind">fn</span>decode</h3>
+<p>The value the whole of <code>b</code> from <code>at</code> carries, which is one to eight octets. <code>None</code> when there are no octets there, or more than eight: a run that long does not fit the value this answers with, and truncating it would be a number nobody wrote.</p>
+<pre class="sig">pub fn decode(BytesView, at? : Int32, order? : Order) -&gt; UInt64?</pre>
 </div>
 <h4 class="group">Readers</h4>
 <div class="entry" id="fixed-read_f32">
@@ -280,14 +299,20 @@
 <h4 class="group">Encoding</h4>
 <div class="entry" id="quic-encode">
 <h3><span class="kind">fn</span>encode</h3>
-<p>Encode <code>v</code> as a QUIC variable-length integer (RFC 9000 §16) in the shortest form that holds it: the two most-significant bits of the first byte select the length (00 → 1 byte / 6-bit value, 01 → 2 / 14-bit, 10 → 4 / 30-bit, 11 → 8 / 62-bit) and the remaining bits carry the value big-endian. <code>v</code> must be below 2^62 (QUIC's varint ceiling).</p>
+<p>Encode <code>v</code> as a QUIC variable-length integer (RFC 9000 §16) in the shortest form that holds it: the two most-significant bits of the first byte select the length (00 → 1 byte / 6-bit value, 01 → 2 / 14-bit, 10 → 4 / 30-bit, 11 → 8 / 62-bit) and the remaining bits carry the value big-endian. A value above <code>max</code> has no encoding here, and the first two bits of it would silently become the width the reader believed: the call aborts rather than write a number that reads back as a different one.</p>
 <pre class="sig">pub fn encode(UInt64) -&gt; Bytes</pre>
 </div>
 <h4 class="group">Decoding</h4>
 <div class="entry" id="quic-decode">
 <h3><span class="kind">fn</span>decode</h3>
-<p>Decode a QUIC variable-length integer at the start of <code>b</code>, returning its value and the number of bytes it occupied, or <code>None</code> when <code>b</code> is shorter than the length its first byte's prefix declares.</p>
-<pre class="sig">pub fn decode(BytesView) -&gt; (UInt64, Int32)?</pre>
+<p>Decode a QUIC variable-length integer at <code>at</code>, returning its value and the number of bytes it occupied, or <code>None</code> when the bytes from <code>at</code> are fewer than the length its first byte's prefix declares.</p>
+<pre class="sig">pub fn decode(BytesView, at? : Int32) -&gt; (UInt64, Int32)?</pre>
+</div>
+<h4 class="group">Writers</h4>
+<div class="entry" id="quic-write">
+<h3><span class="kind">fn</span>write</h3>
+<p>The same, appended to a buffer rather than allocated.</p>
+<pre class="sig">pub fn write(@buffer.Buffer, UInt64) -&gt; Unit</pre>
 </div>
 <h4 class="group">Measuring</h4>
 <div class="entry" id="quic-size">
@@ -341,10 +366,20 @@
 <div class="band-head"><h2>leb128</h2><span class="route">moonbitstack/moonvar/leb128</span></div>
 <p>Base-128 varints: seven bits an octet, least significant first, plus the zigzag that keeps signed values short.</p>
 <h4 class="group">Values</h4>
+<div class="entry" id="leb128-encode_signed">
+<h3><span class="kind">fn</span>encode_signed</h3>
+<p><code>v</code> as signed LEB128: seven bits an octet, least significant group first, with the high bit of the last octet doubling as the value's sign bit. This is the form DWARF writes a signed attribute in (§7.6) and WebAssembly writes an <code>i32.const</code> in. It is not protobuf's signed varint: that one folds the sign onto an unsigned value and encodes that, which is what <code>zigzag</code> and <code>encode</code> do together. The difference shows at -64, one octet here (<code>40</code>) and two the other way (<code>7f</code>).</p>
+<pre class="sig">pub fn encode_signed(Int64) -&gt; Bytes</pre>
+</div>
 <div class="entry" id="leb128-limit">
 <h3><span class="kind">let</span>limit</h3>
 <p>How many octets sixty-four bits can occupy: nine of seven bits and one of the last. A reader that did not stop here would follow continuation bits for as long as a peer cared to send them.</p>
 <pre class="sig">pub let limit : Int32</pre>
+</div>
+<div class="entry" id="leb128-size_signed">
+<h3><span class="kind">fn</span>size_signed</h3>
+<p>How many octets a signed value takes, without writing it.</p>
+<pre class="sig">pub fn size_signed(Int64) -&gt; Int32</pre>
 </div>
 <h4 class="group">Encoding</h4>
 <div class="entry" id="leb128-encode">
@@ -358,11 +393,21 @@
 <p>The value at <code>at</code> and how many octets it took.</p>
 <pre class="sig">pub fn decode(BytesView, at? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
 </div>
+<div class="entry" id="leb128-decode_signed">
+<h3><span class="kind">fn</span>decode_signed</h3>
+<p>The signed value at <code>at</code> and how many octets it took. The last group's bit six is the sign, and the value is extended with it: <code>7f</code> is -1 rather than 127, and <code>40</code> is -64.</p>
+<pre class="sig">pub fn decode_signed(BytesView, at? : Int32) -&gt; (Int64, Int32) raise Refused</pre>
+</div>
 <h4 class="group">Writers</h4>
 <div class="entry" id="leb128-write">
 <h3><span class="kind">fn</span>write</h3>
 <p>The same, appended to a buffer rather than allocated.</p>
 <pre class="sig">pub fn write(@buffer.Buffer, UInt64) -&gt; Unit</pre>
+</div>
+<div class="entry" id="leb128-write_signed">
+<h3><span class="kind">fn</span>write_signed</h3>
+<p>The same, appended to a buffer rather than allocated.</p>
+<pre class="sig">pub fn write_signed(@buffer.Buffer, Int64) -&gt; Unit</pre>
 </div>
 <h4 class="group">Measuring</h4>
 <div class="entry" id="leb128-size">
@@ -432,7 +477,7 @@
 
 <footer class="site">
   <div class="wrap foot">
-    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <span>moonvar <!-- version -->0.2.0<!-- /version --> · Apache-2.0</span>
     <nav aria-label="Elsewhere">
       <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
       <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
