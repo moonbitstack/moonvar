@@ -372,20 +372,14 @@ pub fn encode(v : UInt64, order~ : Order = order) -> Bytes {
 /// The value the whole of `b` from `at` carries, which is one to eight octets.
 ///
 /// `None` when there are no octets there, or more than eight: a run that long does not
-/// fit the value this answers with, and truncating it would be a number nobody wrote.
+/// fit the value this answers with, and truncating it would be a number nobody wrote. The
+/// bound is `read_uint`'s, so there is one of it.
 pub fn decode(
   b : BytesView,
   at~ : Int32 = 0,
   order~ : Order = order,
 ) -> UInt64? {
-  if at < 0 || at > b.length() {
-    return None
-  }
-  let octets = b.length() - at
-  if octets < 1 || octets > 8 {
-    return None
-  }
-  read_uint(b, at~, size=octets, order~)
+  read_uint(b, at~, size=b.length() - at, order~)
 }
 
 ///|
