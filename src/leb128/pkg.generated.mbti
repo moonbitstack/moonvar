@@ -9,15 +9,23 @@ import {
 // Values
 pub fn decode(BytesView, at? : Int32) -> (UInt64, Int32) raise Refused
 
+pub fn decode_signed(BytesView, at? : Int32) -> (Int64, Int32) raise Refused
+
 pub fn encode(UInt64) -> Bytes
+
+pub fn encode_signed(Int64) -> Bytes
 
 pub let limit : Int32
 
 pub fn size(UInt64) -> Int32
 
+pub fn size_signed(Int64) -> Int32
+
 pub fn unzigzag(UInt64) -> Int64
 
 pub fn write(@buffer.Buffer, UInt64) -> Unit
+
+pub fn write_signed(@buffer.Buffer, Int64) -> Unit
 
 pub fn zigzag(Int64) -> UInt64
 

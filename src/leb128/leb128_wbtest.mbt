@@ -116,3 +116,100 @@ test "the offset is where reading starts, and writing appends" {
   assert_eq((c, m), (150UL, 2))
   assert_eq(decode(b[:], at=n + m), (0UL, 1))
 }
+
+///|
+test "signed LEB128 keeps the sign in the last octet's bit six" {
+  // DWARF §7.6 and WebAssembly: seven bits a group, and the last group is extended with
+  // its own top bit, so 7f is -1 rather than 127.
+  assert_eq(hex(encode_signed(0L)), "00")
+  assert_eq(hex(encode_signed(1L)), "01")
+  assert_eq(hex(encode_signed(-1L)), "7f")
+  // 63 is the last positive that fits in six bits of one octet; 64 needs a second, and
+  // in the second all seven bits are zero.
+  assert_eq(hex(encode_signed(63L)), "3f")
+  assert_eq(hex(encode_signed(64L)), "c000")
+  // -64 is the last negative that does, because its bit six is the sign.
+  assert_eq(hex(encode_signed(-64L)), "40")
+  assert_eq(hex(encode_signed(-65L)), "bf7f")
+  assert_eq(hex(encode_signed(127L)), "ff00")
+  assert_eq(hex(encode_signed(-128L)), "807f")
+  assert_eq(hex(encode_signed(-129L)), "ff7e")
+  assert_eq(hex(encode_signed(8191L)), "ff3f")
+  assert_eq(hex(encode_signed(-8192L)), "8040")
+  // Both ends of the sixty-four-bit range, ten octets each.
+  assert_eq(hex(encode_signed(9223372036854775807L)), "ffffffffffffffffff00")
+  assert_eq(hex(encode_signed(-9223372036854775808L)), "8080808080808080807f")
+}
+
+///|
+test "a signed value reads back as it was written, at every magnitude" {
+  for
+    v in [
+      0L, 1L, -1L, 2L, -2L, 63L, 64L, -64L, -65L, 127L, 128L, -128L, -129L, 8191L,
+      -8192L, 8388607L, -8388608L, 2147483647L, -2147483648L, 2147483648L, -2147483649L,
+      9223372036854775807L, -9223372036854775808L, -9223372036854775807L,
+    ] {
+    let encoded = encode_signed(v)
+    assert_eq(
+      decode_signed(encoded[:]),
+      (v, encoded.length()),
+      msg="signed \{v}",
+    )
+    assert_eq(size_signed(v), encoded.length(), msg="signed size of \{v}")
+  }
+}
+
+///|
+test "signed and unsigned LEB128 differ only where the sign bit lands" {
+  // A non-negative value the unsigned form writes without a sign bit is the same run of
+  // octets in both, which is why a reader has to be told which one it is holding.
+  for v in [0L, 1L, 5L, 63L, 8191L] {
+    assert_eq(
+      hex(encode_signed(v)),
+      hex(encode(v.reinterpret_as_uint64())),
+      msg="value \{v}",
+    )
+  }
+  // Above 63 the signed form pays an octet for the sign: 64 is c0 00, not 40.
+  assert_eq(hex(encode(64UL)), "40")
+  assert_eq(hex(encode_signed(64L)), "c000")
+}
+
+///|
+test "a signed value that runs off the end, or past ten octets, is refused" {
+  for b in [b"", b"\x80", b"\x96", b"\x80\x80\x80"] {
+    assert_eq(signed_refused(b) is Truncated(_), true, msg=hex(b))
+  }
+  assert_eq(
+    signed_refused(b"\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x01")
+    is Exceeded(_),
+    true,
+  )
+}
+
+///|
+fn signed_refused(b : Bytes) -> Refused {
+  let mut out : Refused? = None
+  try {
+    let _ = decode_signed(b[:])
+  } catch {
+    e => out = Some(e)
+  }
+  match out {
+    Some(e) => e
+    None => abort("these octets should have been refused")
+  }
+}
+
+///|
+test "a signed value appended to a buffer reads back from its offset" {
+  let buf = Buffer()
+  write_signed(buf, -1L)
+  write_signed(buf, 64L)
+  write(buf, 150UL)
+  let b = buf.to_bytes()
+  assert_eq(hex(b), "7fc0009601")
+  assert_eq(decode_signed(b[:]), (-1L, 1))
+  assert_eq(decode_signed(b[:], at=1), (64L, 2))
+  assert_eq(decode(b[:], at=3), (150UL, 2))
+}
