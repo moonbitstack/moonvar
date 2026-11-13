@@ -22,6 +22,16 @@ fn main {
   // Nineteen octets went in, so a u32 wanting 16 through 19 has nowhere to read
   // the last one from.
   println("  u32 at 16     \{opt_u(@fixed.read_u32(wire[:], at=16))}")
+  // No width agreed in advance: the fewest octets that hold the value, which is the count
+  // `size` gives, and the run read back as one number.
+  let bare = @fixed.encode(0x010203UL)
+  println(
+    "  narrowest     \{hex(bare)} (\{bare.length()} octets) reads \{opt_u64(@fixed.decode(bare[:]))}",
+  )
+  let wide = @fixed.encode(0x010203UL, order=Little)
+  println(
+    "  narrowest le  \{hex(wide)} reads \{opt_u64(@fixed.decode(wide[:], order=Little))}",
+  )
 
   // The same value in each variable-length encoding, and what each one costs.
   println("")
@@ -31,11 +41,13 @@ fn main {
     )
   }
 
-  // Zigzag is why protobuf's signed types stay short.
+  // Two spellings of a signed value. Zigzag is what protobuf writes, and it is why a small
+  // magnitude stays short; DWARF and WebAssembly keep the sign in the last group instead.
+  // The octets agree only while the sign bit happens to be clear of the value.
   println("")
-  for v in [0L, -1L, 1L, -64L, 63L] {
+  for v in [0L, -1L, 1L, -64L, 63L, 64L, -65L] {
     println(
-      "\{pad(v.to_string())} raw=\{@leb128.encode(v.reinterpret_as_uint64()).length()} octets  zigzag=\{@leb128.encode(@leb128.zigzag(v)).length()} octets",
+      "\{pad(v.to_string())} zigzag=\{hex(@leb128.encode(@leb128.zigzag(v)))}  signed=\{hex(@leb128.encode_signed(v))}  \{@leb128.size_signed(v)} octets",
     )
   }
 }
@@ -55,6 +67,14 @@ fn opt_u(o : UInt32?) -> String {
   match o {
     Some(v) => "0x" + hex_u32(v)
     None => "(too short)"
+  }
+}
+
+///|
+fn opt_u64(o : UInt64?) -> String {
+  match o {
+    Some(v) => v.to_string()
+    None => "(not a number)"
   }
 }
 

@@ -25,6 +25,7 @@ const NAMES = {
   quic: ["quic", "RFC 9000 §16"],
   prefix: ["prefix", "RFC 7541 §5.1"],
   leb128: ["leb128", "protobuf · DWARF"],
+  lebs: ["leb128·s", "signed · DWARF"],
   lenenc: ["lenenc", "MySQL · MariaDB"],
   fixedbe: ["fixed", "big-endian"],
   fixedle: ["fixed", "little-endian"],
@@ -104,11 +105,21 @@ function classify(enc, bytes, bits) {
     });
     return { cells, width: bytes.length, note: `The low ${bits} bits of the first octet carry the value; the ${flags} above them belong to the field's flags. Every later octet spends its top bit on "one more follows".` };
   }
-  if (enc === "leb128") {
+  if (enc === "leb128" || enc === "lebs") {
+    const last = bytes.length - 1;
+    const signed = enc === "lebs";
     bytes.forEach((byte, i) => {
-      cells.push(push(byte, (b) => (b === 7 ? "cont" : "value")));
+      cells.push(
+        push(byte, (b) => (b === 7 ? "cont" : signed && i === last && b === 6 ? "sign" : "value"))
+      );
     });
-    return { cells, width: bytes.length, note: "Every octet gives seven bits to the value, least significant group first. The eighth bit says whether another octet follows." };
+    return {
+      cells,
+      width: bytes.length,
+      note: signed
+        ? `The same seven-bit groups, and the last group's bit six is the sign: ${(bytes[last] & 0x40) ? "set, so the value is negative" : "clear, and the value is taken as written"}.`
+        : "Every octet gives seven bits to the value, least significant group first. The eighth bit says whether another octet follows.",
+    };
   }
   if (enc === "lenenc") {
     const first = bytes[0];
@@ -173,6 +184,17 @@ function stepsHTML(enc, row, bytes, bits) {
       step(String(i + 1).padStart(2, "0"), `${hx(bytes[i])} · seven bits ${num(body)}${i > 1 ? " × " + num(scale) : ""}; bit 7 is ${more ? "set, another octet follows" : "clear, this is the last one"}.`);
       scale *= 128;
     }
+    step("=", `the library reads <code>${row.read}</code>.`);
+  } else if (enc === "lebs") {
+    let scale = 1;
+    const last = bytes.length - 1;
+    bytes.forEach((b, i) => {
+      const body = b & 0x7f;
+      const more = (b & 0x80) !== 0;
+      const tail = i === last ? (b & 0x40 ? "; bit six is set, so the sign extends the value" : "; bit six is clear, so the value stands as it is") : "";
+      step(String(i + 1).padStart(2, "0"), `${hx(b)} · low seven bits ${body}${i ? " × " + num(scale) : ""}; bit 7 is ${more ? "set, so another octet follows" : "clear, so the value ends here"}${tail}.`);
+      scale *= 128;
+    });
     step("=", `the library reads <code>${row.read}</code>.`);
   } else if (enc === "leb128") {
     let scale = 1;
@@ -271,6 +293,7 @@ async function paintDecode() {
   }
   const LABEL = {
     leb128: "leb128",
+    lebs: "leb128 signed",
     lenenc: "lenenc",
     quic: "quic",
     prefix: `prefix(${state.bits})`,

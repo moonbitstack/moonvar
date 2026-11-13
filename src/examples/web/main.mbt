@@ -61,6 +61,24 @@ pub fn probe(text : String, bits : Int32) -> String {
     None => "mismatch"
   }
   rows.add(row_json("leb128", hex(leb), leb.length(), "", leb_read))
+  // Signed LEB128: the same groups, with the last one's bit six carrying the sign. The
+  // field holds a signed value, so the ceiling here is 2^63-1 rather than 2^64-1.
+  if value > 0x7fffffffffffffffUL {
+    rows.add(row_json("lebs", "", 0, "above 2^63-1", ""))
+  } else {
+    let signed = value.reinterpret_as_int64()
+    let b = @leb128.encode_signed(signed)
+    let read = match try_decode_leb_signed(b) {
+      Some((v, n)) =>
+        if v == signed && n == b.length() {
+          v.to_string()
+        } else {
+          "mismatch"
+        }
+      None => "mismatch"
+    }
+    rows.add(row_json("lebs", hex(b), b.length(), "", read))
+  }
   // MySQL's length-encoded integer: one octet, or a marker and little-endian octets.
   let len = @lenenc.encode(value)
   let len_read = match try_decode_lenenc(len) {
@@ -114,6 +132,10 @@ pub fn scan(text : String, bits : Int32) -> String {
   match try_decode_leb(bytes) {
     Some((v, n)) => rows.add(scan_json("leb128", v.to_string(), n, ""))
     None => rows.add(scan_json("leb128", "", 0, leb_why(bytes)))
+  }
+  match try_decode_leb_signed(bytes) {
+    Some((v, n)) => rows.add(scan_json("lebs", v.to_string(), n, ""))
+    None => rows.add(scan_json("lebs", "", 0, leb_signed_why(bytes)))
   }
   match try_decode_lenenc(bytes) {
     Some((v, n)) => rows.add(scan_json("lenenc", v.to_string(), n, ""))
@@ -247,6 +269,26 @@ fn try_decode_leb(b : Bytes) -> (UInt64, Int32)? {
 fn leb_why(b : Bytes) -> String {
   try {
     let _ = @leb128.decode(b[:])
+    ""
+  } catch {
+    Truncated(m) => "truncated: " + m
+    Exceeded(limit~, got~) => "exceeded: limit \{limit}, got \{got}"
+  }
+}
+
+///|
+/// A signed LEB128 value read back, or `None` where the reader refuses.
+fn try_decode_leb_signed(b : Bytes) -> (Int64, Int32)? {
+  Some(@leb128.decode_signed(b[:])) catch {
+    _ => None
+  }
+}
+
+///|
+/// The refusal a signed LEB128 reader gave, in words.
+fn leb_signed_why(b : Bytes) -> String {
+  try {
+    let _ = @leb128.decode_signed(b[:])
     ""
   } catch {
     Truncated(m) => "truncated: " + m

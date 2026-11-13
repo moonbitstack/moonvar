@@ -26,8 +26,9 @@ fn main {
 /// `payload` with its length in front, as QUIC writes a length.
 fn frame(payload : BytesView) -> Bytes {
   let buf = Buffer()
-  // The length is itself a QUIC varint, so a short payload costs one octet.
-  buf.write_bytes(@quic.encode(payload.length().to_uint64()))
+  // The length is itself a QUIC varint, so a short payload costs one octet; appending it
+  // to the buffer the payload is going into saves writing it out and copying it in.
+  @quic.write(buf, payload.length().to_uint64())
   buf.write_bytes(payload.to_owned())
   buf.to_bytes()
 }

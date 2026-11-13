@@ -948,6 +948,7 @@ select.num { width: auto; cursor: pointer; }
 .row[data-id="quic"] { --hue: var(--h-quic); }
 .row[data-id="prefix"] { --hue: var(--h-prefix); }
 .row[data-id="leb128"] { --hue: var(--h-leb128); }
+.row[data-id="lebs"] { --hue: var(--h-leb128); }
 .row[data-id="lenenc"] { --hue: var(--h-lenenc); }
 .row[data-id="fixedbe"], .row[data-id="fixedle"] { --hue: var(--h-fixed); }
 
@@ -1616,6 +1617,7 @@ td b { font-weight: 650; }
 .bit.prefix { background: color-mix(in oklab, var(--accent) 26%, transparent); border-color: color-mix(in oklab, var(--accent) 44%, transparent); color: var(--accent-ink); }
 .bit.cont   { background: color-mix(in oklab, var(--amber) 26%, transparent); border-color: color-mix(in oklab, var(--amber) 44%, transparent); color: color-mix(in oklab, var(--amber) 88%, var(--ink)); }
 .bit.marker { background: color-mix(in oklab, var(--violet) 24%, transparent); border-color: color-mix(in oklab, var(--violet) 42%, transparent); color: color-mix(in oklab, var(--violet) 86%, var(--ink)); }
+.bit.sign   { background: color-mix(in oklab, var(--violet) 30%, transparent); border-color: color-mix(in oklab, var(--violet) 60%, transparent); color: color-mix(in oklab, var(--violet) 92%, var(--ink)); }
 .bit.gap { width: 0.45em; border: 0; background: none; box-shadow: none; }
 
 /* What the eight cells add up to, at the end of the row. */
@@ -1651,6 +1653,7 @@ td b { font-weight: 650; }
 .legend .l-cont   { background: color-mix(in oklab, var(--amber) 50%, transparent); }
 .legend .l-flag   { background: color-mix(in oklab, var(--coral) 50%, transparent); }
 .legend .l-marker { background: color-mix(in oklab, var(--violet) 50%, transparent); }
+.legend .l-sign   { background: color-mix(in oklab, var(--violet) 60%, transparent); }
 .legend .l-value  { background: color-mix(in oklab, var(--ink) 22%, transparent); }
 
 .steps { display: grid; gap: 0.5rem; margin: 0.4rem 0 0; }

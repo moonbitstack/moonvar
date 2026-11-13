@@ -63,6 +63,7 @@
         <button class="tab" type="button" role="tab" data-enc="quic" aria-selected="true">quic</button>
         <button class="tab" type="button" role="tab" data-enc="prefix" aria-selected="false">prefix</button>
         <button class="tab" type="button" role="tab" data-enc="leb128" aria-selected="false">leb128</button>
+        <button class="tab" type="button" role="tab" data-enc="lebs" aria-selected="false">leb128·s</button>
         <button class="tab" type="button" role="tab" data-enc="lenenc" aria-selected="false">lenenc</button>
         <button class="tab" type="button" role="tab" data-enc="fixedbe" aria-selected="false">fixed</button>
       </div>
@@ -86,6 +87,7 @@
         <span><i class="l-flag"></i>flags · the field's own bits</span>
         <span><i class="l-cont"></i>continuation · another octet follows</span>
         <span><i class="l-marker"></i>marker · which width follows</span>
+        <span><i class="l-sign"></i>sign · the last group's sign bit</span>
         <span><i class="l-value"></i>value</span>
       </div>
     </div>
@@ -159,7 +161,7 @@
 
 <footer class="site">
   <div class="wrap foot">
-    <span>moonvar 0.2.0 · Apache-2.0</span>
+    <span>moonvar <!-- version -->0.2.2<!-- /version --> · Apache-2.0</span>
     <nav aria-label="Elsewhere">
       <a href="https://github.com/moonbitstack/moonvar">GitHub</a>
       <a href="https://mooncakes.io/docs/moonbitstack/moonvar">mooncakes</a>
