@@ -155,7 +155,7 @@
 <h4 class="group">Decoding</h4>
 <div class="entry" id="fixed-decode">
 <h3><span class="kind">fn</span>decode</h3>
-<p>The value the whole of <code>b</code> from <code>at</code> carries, which is one to eight octets. <code>None</code> when there are no octets there, or more than eight: a run that long does not fit the value this answers with, and truncating it would be a number nobody wrote.</p>
+<p>The value the whole of <code>b</code> from <code>at</code> carries, which is one to eight octets. <code>None</code> when there are no octets there, or more than eight: a run that long does not fit the value this answers with, and truncating it would be a number nobody wrote. The bound is <code>read_uint</code>'s, so there is one of it.</p>
 <pre class="sig">pub fn decode(BytesView, at? : Int32, order? : Order) -&gt; UInt64?</pre>
 </div>
 <h4 class="group">Readers</h4>
