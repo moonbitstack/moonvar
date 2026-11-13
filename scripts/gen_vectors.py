@@ -261,26 +261,16 @@ def u64(v):
 
 def i64(v):
     if v == -(1 << 63):
-        return "(-9223372036854775807L - 1L)"
+        return "-9223372036854775807L - 1L"
     return f"{v}L"
 
 
 def table(name, rows, row_type):
     body = "".join(f"  {r},\n" for r in rows)
-    return f"///|\nlet {name} : Array[{row_type}] = [\n{body}]\n"
+    return f"\n///|\nlet {name} : Array[{row_type}] = [\n{body}]\n"
 
 
-def render_fixed(cases, minimal):
-    width_rows = [f'({u64(v)}, {w}, "{be}", "{le}")' for v, w, be, le in cases]
-    min_rows = [f'({u64(v)}, "{be}", "{le}")' for v, be, le in minimal]
-    out = [HEADER.format(provenance=(
-        "The fixed widths come from CPython's `struct` and Go's `encoding/binary`; the\n"
-        "// narrowest-width table from `int.to_bytes` and the same `binary` functions."))]
-    out.append(preamble())
-    out.append(table("fixed_widths", width_rows,
-                     "(UInt64, Int32, String, String)"))
-    out.append(table("fixed_minimal", min_rows, "(UInt64, String, String)"))
-    out.append('''
+TEST_FIXED = '''
 ///|
 test "the fixed widths, as the reference packers write them" {
   for case in fixed_widths {
@@ -315,7 +305,11 @@ test "the narrowest width, as the reference packers write it" {
   for case in fixed_minimal {
     let (value, big, little) = case
     assert_eq(vec_hex(encode(value)), big, msg="encode \\{value}")
-    assert_eq(vec_hex(encode(value, order=Little)), little, msg="encode \\{value}")
+    assert_eq(
+      vec_hex(encode(value, order=Little)),
+      little,
+      msg="encode \\{value} little-endian",
+    )
     assert_eq(encode(value).length(), size(value), msg="size of \\{value}")
     assert_eq(decode(vec_bytes(big)[:]), Some(value), msg="decode \\{big}")
     assert_eq(
@@ -325,21 +319,9 @@ test "the narrowest width, as the reference packers write it" {
     )
   }
 }
-''')
-    return "".join(out)
+'''
 
-
-def render_leb128(unsigned, signed):
-    u_rows = [f'({u64(v)}, "{h}")' for v, h in unsigned]
-    s_rows = [f'({i64(v)}, "{h}")' for v, h in signed]
-    out = [HEADER.format(provenance=(
-        "The unsigned table comes from the `leb128` package and Go's\n"
-        "// `binary.PutUvarint`; the signed one (SLEB128, as DWARF and WebAssembly write\n"
-        "// a signed value) from the same package, whose reader and pyelftools' agree."))]
-    out.append(preamble(emit=False))
-    out.append(table("leb128_unsigned", u_rows, "(UInt64, String)"))
-    out.append(table("leb128_signed", s_rows, "(Int64, String)"))
-    out.append('''
+TEST_LEB128 = '''
 ///|
 test "unsigned LEB128, as the reference implementations write it" {
   for case in leb128_unsigned {
@@ -365,7 +347,109 @@ test "signed LEB128, as the reference implementations write it" {
     assert_eq(size_signed(value), wire.length(), msg="size of \\{value}")
   }
 }
-''')
+'''
+
+TEST_QUIC = '''
+///|
+test "QUIC varints, as the reference implementations write them" {
+  for case in quic_varints {
+    let (value, octets) = case
+    let wire = vec_bytes(octets)
+    assert_eq(vec_hex(encode(value)), octets, msg="encode \\{value}")
+    assert_eq(
+      vec_hex(vec_emit(b => write(b, value))),
+      octets,
+      msg="write \\{value}",
+    )
+    assert_eq(
+      decode(wire[:]),
+      Some((value, wire.length())),
+      msg="decode \\{octets}",
+    )
+    assert_eq(size(value), wire.length(), msg="size of \\{value}")
+  }
+}
+
+///|
+test "a value a sender padded to a wider form still reads" {
+  // RFC 9000 §16 lets a sender use more octets than the value needs, so the reader
+  // cannot insist on the shortest form; the A.1 vectors include one.
+  for case in quic_padded {
+    let (value, octets) = case
+    let wire = vec_bytes(octets)
+    assert_eq(
+      decode(wire[:]),
+      Some((value, wire.length())),
+      msg="decode \\{octets}",
+    )
+  }
+}
+'''
+
+TEST_PREFIX = '''
+///|
+test "prefix integers, as the reference implementation writes them" {
+  for case in prefix_integers {
+    let (value, bits, octets) = case
+    let wire = vec_bytes(octets)
+    assert_eq(
+      vec_hex(encode(value, prefix=bits)),
+      octets,
+      msg="encode \\{value} in \\{bits}",
+    )
+    assert_eq(
+      decode(wire[:], prefix=bits),
+      (value, wire.length()),
+      msg="decode \\{octets}",
+    )
+    assert_eq(size(value, prefix=bits), wire.length(), msg="size of \\{value}")
+  }
+}
+'''
+
+TEST_LENENC = '''
+///|
+test "length-encoded integers, as the reference implementations write them" {
+  for case in lenenc_integers {
+    let (value, octets) = case
+    let wire = vec_bytes(octets)
+    assert_eq(vec_hex(encode(value)), octets, msg="encode \\{value}")
+    assert_eq(
+      vec_hex(vec_emit(b => write(b, value))),
+      octets,
+      msg="write \\{value}",
+    )
+    assert_eq(decode(wire[:]), (value, wire.length()), msg="decode \\{octets}")
+    assert_eq(size(value), wire.length(), msg="size of \\{value}")
+  }
+}
+'''
+
+
+def render_fixed(cases, minimal):
+    width_rows = [f'({u64(v)}, {w}, "{be}", "{le}")' for v, w, be, le in cases]
+    min_rows = [f'({u64(v)}, "{be}", "{le}")' for v, be, le in minimal]
+    out = [HEADER.format(provenance=(
+        "The fixed widths come from CPython's `struct` and Go's `encoding/binary`; the\n"
+        "// narrowest-width table from `int.to_bytes` and the same `binary` functions."))]
+    out.append(preamble())
+    out.append(table("fixed_widths", width_rows, "(UInt64, Int32, String, String)"))
+    out.append(table("fixed_minimal", min_rows, "(UInt64, String, String)"))
+    out.append(TEST_FIXED)
+    return "".join(out)
+
+
+def render_leb128(unsigned, signed):
+    u_rows = [f'({u64(v)}, "{h}")' for v, h in unsigned]
+    s_rows = [f'({i64(v)}, "{h}")' for v, h in signed]
+    out = [HEADER.format(provenance=(
+        "The unsigned table comes from the `leb128` package and Go's\n"
+        "// `binary.PutUvarint`; the signed one (SLEB128, as DWARF and WebAssembly write\n"
+        "// a signed value) from the same package, whose reader and pyelftools' agree."))]
+    out.append(preamble(emit=False))
+    out.append(table("leb128_unsigned", u_rows, "(UInt64, String)"))
+    out.append(table("leb128_signed", s_rows, "(Int64, String)"))
+    out.append(TEST_LEB128)
     return "".join(out)
 
 
@@ -378,30 +462,7 @@ def render_quic(cases, padded):
     out.append(preamble())
     out.append(table("quic_varints", rows, "(UInt64, String)"))
     out.append(table("quic_padded", pad_rows, "(UInt64, String)"))
-    out.append('''
-///|
-test "QUIC varints, as the reference implementations write them" {
-  for case in quic_varints {
-    let (value, octets) = case
-    let wire = vec_bytes(octets)
-    assert_eq(vec_hex(encode(value)), octets, msg="encode \\{value}")
-    assert_eq(vec_hex(vec_emit(b => write(b, value))), octets, msg="write \\{value}")
-    assert_eq(decode(wire[:]), Some((value, wire.length())), msg="decode \\{octets}")
-    assert_eq(size(value), wire.length(), msg="size of \\{value}")
-  }
-}
-
-///|
-test "a value a sender padded to a wider form still reads" {
-  // RFC 9000 §16 lets a sender use more octets than the value needs, so the reader
-  // cannot insist on the shortest form; the A.1 vectors include one.
-  for case in quic_padded {
-    let (value, octets) = case
-    let wire = vec_bytes(octets)
-    assert_eq(decode(wire[:]), Some((value, wire.length())), msg="decode \\{octets}")
-  }
-}
-''')
+    out.append(TEST_QUIC)
     return "".join(out)
 
 
@@ -413,18 +474,7 @@ def render_prefix(cases):
         "// reads the 7-bit-prefix form back out of a whole header block."))]
     out.append(preamble(emit=False))
     out.append(table("prefix_integers", rows, "(Int32, Int32, String)"))
-    out.append('''
-///|
-test "prefix integers, as the reference implementation writes them" {
-  for case in prefix_integers {
-    let (value, bits, octets) = case
-    let wire = vec_bytes(octets)
-    assert_eq(vec_hex(encode(value, prefix=bits)), octets, msg="encode \\{value} in \\{bits}")
-    assert_eq(decode(wire[:], prefix=bits), (value, wire.length()), msg="decode \\{octets}")
-    assert_eq(size(value, prefix=bits), wire.length(), msg="size of \\{value}")
-  }
-}
-''')
+    out.append(TEST_PREFIX)
     return "".join(out)
 
 
@@ -435,19 +485,7 @@ def render_lenenc(cases):
         "// reader, which is MySQL's own wire documentation worked out twice."))]
     out.append(preamble())
     out.append(table("lenenc_integers", rows, "(UInt64, String)"))
-    out.append('''
-///|
-test "length-encoded integers, as the reference implementations write them" {
-  for case in lenenc_integers {
-    let (value, octets) = case
-    let wire = vec_bytes(octets)
-    assert_eq(vec_hex(encode(value)), octets, msg="encode \\{value}")
-    assert_eq(vec_hex(vec_emit(b => write(b, value))), octets, msg="write \\{value}")
-    assert_eq(decode(wire[:]), (value, wire.length()), msg="decode \\{octets}")
-    assert_eq(size(value), wire.length(), msg="size of \\{value}")
-  }
-}
-''')
+    out.append(TEST_LENENC)
     return "".join(out)
 
 

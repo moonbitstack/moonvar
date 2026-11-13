@@ -157,7 +157,7 @@ test "the narrowest width, as the reference packers write it" {
     assert_eq(
       vec_hex(encode(value, order=Little)),
       little,
-      msg="encode \{value}",
+      msg="encode \{value} little-endian",
     )
     assert_eq(encode(value).length(), size(value), msg="size of \{value}")
     assert_eq(decode(vec_bytes(big)[:]), Some(value), msg="decode \{big}")
